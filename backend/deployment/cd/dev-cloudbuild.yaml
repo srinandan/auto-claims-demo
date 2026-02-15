@@ -40,7 +40,7 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "auto-claims-frontend"
+      - "auto-claims-backend"
       - "--project"
       - "${PROJECT_ID}"
       - "--region"
@@ -75,7 +75,7 @@ substitutions:
   _STAGING_PROJECT_ID: ${PROJECT_ID}
   _REGION: ${_REGION}
   _ARTIFACT_REGISTRY_REPO_NAME: auto-claims
-  _CONTAINER_NAME: auto-claims-frontend
+  _CONTAINER_NAME: auto-claims-backend
   _CLOUD_RUN_APP_SA_EMAIL: "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
   _COMMIT_SHA: ${_COMMIT_SHA}
 
