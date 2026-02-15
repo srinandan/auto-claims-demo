@@ -32,6 +32,7 @@ import (
 
 const AIServiceURL = "http://localhost:8000/process-claims"
 const FindShopsURL = "http://localhost:8000/find-repair-shops"
+const BookAppointmentURL = "http://localhost:8000/book-appointment"
 
 // ListClaims returns all claims
 func ListClaims(c *gin.Context) {
@@ -135,6 +136,72 @@ func FindRepairShops(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
 		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("AI service returned status %d", resp.StatusCode)})
+		return
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode AI response"})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
+}
+
+// BookAppointment proxies request to AI service for booking
+func BookAppointment(c *gin.Context) {
+	id := c.Param("id")
+	var claim models.Claim
+	if err := database.DB.First(&claim, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Claim not found"})
+		return
+	}
+
+	var input struct {
+		SessionID    string `json:"session_id"`
+		Message      string `json:"message"`
+		ShopName     string `json:"shop_name"`
+		CustomerName string `json:"customer_name"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Use claim's customer name if not provided (though input struct defaults are empty string)
+	customerName := input.CustomerName
+	if customerName == "" {
+		customerName = claim.CustomerName
+	}
+
+	// Construct context
+	contextMap := map[string]interface{}{
+		"shop_name":     input.ShopName,
+		"customer_name": customerName,
+	}
+
+	reqBody := map[string]interface{}{
+		"session_id": input.SessionID,
+		"message":    input.Message,
+		"context":    contextMap,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal request"})
+		return
+	}
+
+	resp, err := http.Post(BookAppointmentURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
+        return
 	}
 	defer resp.Body.Close()
 
@@ -330,7 +397,7 @@ func AnalyzeClaim(c *gin.Context) {
 	database.DB.Save(&claim)
 
 	// Prepare JSON request to AI Service with GCS URIs
-	var fileURIs []string
+	fileURIs := []string{}
 	for _, photo := range claim.Photos {
 		if !strings.HasPrefix(photo.URL, "uploads/") {
 			// Construct gs:// URI

@@ -26,6 +26,7 @@ import io
 from vision import detect_bounding_boxes
 from claims_agent import run_claims_agent
 from repair_shop_agent import run_repair_shop_agent
+from appointment_agent import run_appointment_agent
 from car_damage_detector import CarDamageDetector
 from fastapi.concurrency import run_in_threadpool
 
@@ -99,6 +100,14 @@ class RepairShopRequest(BaseModel):
 
 class RepairShopResponse(BaseModel):
     shops: List[Dict[str, Any]]
+
+class AppointmentRequest(BaseModel):
+    session_id: str
+    message: str
+    context: Optional[Dict[str, Any]] = None
+
+class AppointmentResponse(BaseModel):
+    agent_message: str
 
 def read_image_from_gcs(uri: str) -> bytes:
     """Reads image content from GCS URI gs://bucket/path"""
@@ -184,7 +193,10 @@ async def process_claims(request: ClaimsRequest):
     if not aggregated_findings:
         aggregated_findings = ["No visible damage detected."]
 
-    agent_response = await run_claims_agent(aggregated_findings)
+    if MOCK_MODE:
+        agent_response = mock_claims_agent_response(aggregated_findings)
+    else:
+        agent_response = await run_claims_agent(aggregated_findings)
 
     return ClaimsProcessResponse(
         findings=aggregated_findings,
@@ -208,6 +220,18 @@ async def find_repair_shops(request: RepairShopRequest):
     )
     return RepairShopResponse(shops=shops)
 
+@app.post("/book-appointment", response_model=AppointmentResponse)
+async def book_appointment(request: AppointmentRequest):
+    print(f"Booking appointment session {request.session_id}")
+
+    response = await run_appointment_agent(
+        request.session_id,
+        request.message,
+        request.context
+    )
+
+    return AppointmentResponse(agent_message=response)
+
 def mock_repair_shop_search():
     return {
         "shops": [
@@ -226,6 +250,20 @@ def mock_repair_shop_search():
                 "reasoning": "Specializes in collision repair."
             }
         ]
+    }
+
+def mock_claims_agent_response(findings):
+    return {
+        "decision": "Approved",
+        "reasoning": "Damage is minor and consistent with description (MOCK).",
+        "estimate": {
+            "items": [
+                {"part": "Bumper Repair", "cost": 350.00},
+                {"part": "Labor (2 hours)", "cost": 200.00},
+                {"part": "Paint Touch-up", "cost": 150.00}
+            ],
+            "total_cost": 700.00
+        }
     }
 
 def mock_analysis(photo_id):

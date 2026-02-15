@@ -10,3 +10,4 @@ google-cloud-storage
 ultralytics
 opencv-python-headless
 Pillow
+huggingface_hub
