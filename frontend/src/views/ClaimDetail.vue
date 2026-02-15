@@ -13,18 +13,12 @@
       </div>
       <div class="space-x-2">
         <button
-          v-if="claim.status === 'New' || claim.status === 'Simple' || claim.status === 'Complex'"
+          v-if="claim.status === 'New'"
           @click="analyzeClaim"
           class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
           :disabled="analyzing"
         >
           {{ analyzing ? 'Analyzing...' : 'Analyze with AI' }}
-        </button>
-        <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
-          Request Retake
-        </button>
-        <button class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-          Approve Estimate
         </button>
       </div>
     </div>
@@ -66,10 +60,6 @@
           />
 
           <!-- Bounding Boxes Overlay -->
-          <!-- We position this absolutely over the image container.
-               Since the container shrinks to fit the image (inline-block),
-               absolute positioning 0,0,100%,100% should match the image EXACTLY.
-          -->
           <div
             v-if="detections.length > 0"
             class="absolute top-0 left-0 w-full h-full pointer-events-none"
@@ -123,7 +113,7 @@
               >
                 {{ part.replace('_', ' ') }}
               </span>
-              <span v-if="parseParts(selectedPhoto.analysis_result.parts_detected).length === 0" class="text-sm text-gray-500">None</span>
+              <span v-if="parseParts(selectedPhoto.analysis_result.parts_detected).length === 0" class="text-sm text-gray-500">None detected</span>
             </div>
           </div>
         </div>
@@ -134,42 +124,52 @@
         <hr class="my-4" />
 
         <!-- Claim Estimate -->
-        <div>
-          <h3 class="font-bold text-lg mb-2">Assessment</h3>
+        <div v-if="claim.estimates && claim.estimates.length > 0">
+          <h3 class="font-bold text-lg mb-2">Estimate ({{ claim.estimates[0].source }})</h3>
 
-          <div class="mb-4">
-            <span class="text-sm text-gray-500">Total Loss Probability</span>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-              <div
-                class="bg-red-600 h-2.5 rounded-full"
-                :style="{ width: (claim.total_loss_probability * 100) + '%' }"
-              ></div>
+          <div class="bg-gray-50 p-4 rounded border mb-6">
+            <div class="flex justify-between font-bold text-lg mb-2">
+              <span>Total</span>
+              <span>${{ claim.estimates[0].total_amount.toFixed(2) }}</span>
             </div>
-            <div class="text-right text-xs mt-1">{{ (claim.total_loss_probability * 100).toFixed(1) }}%</div>
-          </div>
-
-          <div v-if="claim.estimates && claim.estimates.length > 0">
-            <h4 class="font-semibold text-sm mb-2">Draft Estimate ({{ claim.estimates[0].source }})</h4>
-            <div class="bg-gray-50 p-4 rounded border">
-              <div class="flex justify-between font-bold text-lg mb-2">
-                <span>Total</span>
-                <span>${{ claim.estimates[0].total_amount.toFixed(2) }}</span>
-              </div>
-               <!-- Simple Items List -->
-               <div class="text-xs text-gray-600 space-y-1 mt-2">
-                 <div v-for="(item, idx) in parseItems(claim.estimates[0].items)" :key="idx" class="flex justify-between">
-                   <span>{{ item.part }}</span>
-                   <span>${{ item.cost }}</span>
-                 </div>
+             <!-- Simple Items List -->
+             <div class="text-xs text-gray-600 space-y-1 mt-2">
+               <div v-for="(item, idx) in parseItems(claim.estimates[0].items)" :key="idx" class="flex justify-between">
+                 <span>{{ item.part }}</span>
+                 <span>${{ item.cost }}</span>
                </div>
-            </div>
-
-            <!-- Repair Shop Comparison Placeholder -->
-             <div class="mt-4 p-3 border border-dashed border-gray-400 rounded bg-yellow-50">
-               <h5 class="font-bold text-sm text-yellow-800">Repair Shop Comparison</h5>
-               <p class="text-xs text-gray-600 mt-1">Submit external estimate to compare. (Optional)</p>
              </div>
           </div>
+
+          <!-- Decision Actions -->
+          <div v-if="claim.status === 'Assessed'" class="space-y-3">
+            <h4 class="font-semibold text-sm">Claim Decision</h4>
+            <button
+              @click="updateStatus('Approved')"
+              class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex justify-center items-center"
+              :disabled="updating"
+            >
+              <span>Accept Estimate</span>
+            </button>
+            <button
+              @click="updateStatus('Review Required')"
+              class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded flex justify-center items-center"
+              :disabled="updating"
+            >
+              <span>File Exception (Request Review)</span>
+            </button>
+          </div>
+
+          <div v-if="claim.status === 'Approved'" class="p-4 bg-green-100 text-green-800 rounded border border-green-200">
+            <p class="font-bold text-center">Estimate Accepted</p>
+            <p class="text-xs text-center mt-1">Payment processing will begin shortly.</p>
+          </div>
+
+          <div v-if="claim.status === 'Review Required'" class="p-4 bg-yellow-100 text-yellow-800 rounded border border-yellow-200">
+            <p class="font-bold text-center">Exception Filed</p>
+            <p class="text-xs text-center mt-1">An agent will review your claim.</p>
+          </div>
+
         </div>
       </div>
     </div>
@@ -185,6 +185,7 @@ const route = useRoute()
 const claim = ref({})
 const loading = ref(true)
 const analyzing = ref(false)
+const updating = ref(false)
 const selectedPhoto = ref(null)
 const imageRef = ref(null)
 
@@ -236,6 +237,19 @@ const analyzeClaim = async () => {
   }
 }
 
+const updateStatus = async (status) => {
+  updating.value = true
+  try {
+    const response = await axios.put(`/api/claims/${route.params.id}`, { status })
+    claim.value.status = response.data.status
+  } catch (error) {
+    console.error('Error updating claim:', error)
+    alert('Update failed')
+  } finally {
+    updating.value = false
+  }
+}
+
 const selectPhoto = (photo) => {
   selectedPhoto.value = photo
 }
@@ -275,6 +289,8 @@ const statusBadgeClass = (status) => {
     case 'Simple': return 'bg-green-100 text-green-800'
     case 'Complex': return 'bg-yellow-100 text-yellow-800'
     case 'Total Loss': return 'bg-red-100 text-red-800'
+    case 'Approved': return 'bg-green-100 text-green-800'
+    case 'Review Required': return 'bg-yellow-100 text-yellow-800'
     default: return 'bg-gray-100 text-gray-800'
   }
 }
