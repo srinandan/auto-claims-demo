@@ -1,3 +1,19 @@
+<!--
+ Copyright 2026 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+
 <template>
   <div class="p-6 h-screen flex flex-col box-border">
     <!-- Header -->
@@ -20,6 +36,50 @@
         >
           {{ analyzing ? 'Analyzing...' : 'Analyze with AI' }}
         </button>
+      </div>
+    </div>
+
+    <!-- Repair Shops Modal -->
+    <div v-if="showRepairShops" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+        <div class="p-4 border-b flex justify-between items-center">
+          <h2 class="text-xl font-bold">Nearby Repair Shops</h2>
+          <button @click="showRepairShops = false" class="text-gray-500 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-4 overflow-y-auto flex-grow">
+          <div v-if="loadingShops" class="text-center py-8">
+            <p>Searching for the best shops near you...</p>
+          </div>
+
+          <div v-else-if="repairShops.length === 0" class="text-center py-8 text-gray-500">
+            No repair shops found.
+          </div>
+
+          <div v-else class="space-y-4">
+            <div v-for="(shop, index) in repairShops" :key="index" class="border rounded p-4 hover:bg-gray-50">
+              <div class="flex justify-between items-start">
+                <h3 class="font-bold text-lg">{{ shop.name }}</h3>
+                <span v-if="shop.rating" class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded flex items-center">
+                  ★ {{ shop.rating }}
+                </span>
+              </div>
+              <p class="text-gray-600 text-sm mt-1">{{ shop.address }}</p>
+              <p v-if="shop.phone" class="text-gray-600 text-sm">{{ shop.phone }}</p>
+              <p v-if="shop.reasoning" class="text-sm mt-2 text-gray-700 italic">"{{ shop.reasoning }}"</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 border-t bg-gray-50 text-right">
+          <button @click="showRepairShops = false" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
+            Close
+          </button>
+        </div>
       </div>
     </div>
 
@@ -171,6 +231,16 @@
           </div>
 
         </div>
+
+        <!-- Repair Shop Search -->
+        <div v-if="['Assessed', 'Approved', 'Review Required'].includes(claim.status)" class="mt-6 pt-4 border-t">
+          <button
+            @click="findRepairShops"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex justify-center items-center"
+          >
+            <span class="mr-2">🔧</span> Find Repair Shops
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -188,6 +258,9 @@ const analyzing = ref(false)
 const updating = ref(false)
 const selectedPhoto = ref(null)
 const imageRef = ref(null)
+const showRepairShops = ref(false)
+const repairShops = ref([])
+const loadingShops = ref(false)
 
 // Detections for the selected photo
 const detections = computed(() => {
@@ -234,6 +307,25 @@ const analyzeClaim = async () => {
     alert('Analysis failed')
   } finally {
     analyzing.value = false
+  }
+}
+
+const findRepairShops = async () => {
+  showRepairShops.value = true
+  loadingShops.value = true
+  repairShops.value = []
+
+  try {
+    const response = await axios.post(`/api/claims/${route.params.id}/repair-shops`)
+    if (response.data && response.data.shops) {
+      repairShops.value = response.data.shops
+    }
+  } catch (error) {
+    console.error('Error finding repair shops:', error)
+    alert('Failed to find repair shops')
+    showRepairShops.value = false
+  } finally {
+    loadingShops.value = false
   }
 }
 

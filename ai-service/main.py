@@ -1,3 +1,17 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,6 +25,7 @@ import io
 # Local imports
 from vision import detect_bounding_boxes
 from claims_agent import run_claims_agent
+from repair_shop_agent import run_repair_shop_agent
 from car_damage_detector import CarDamageDetector
 from fastapi.concurrency import run_in_threadpool
 
@@ -29,7 +44,11 @@ app.add_middleware(
 # Configuration
 MOCK_MODE = os.environ.get("MOCK_MODE", "false").lower() == "true"
 
-_, project_id = google.auth.default()
+try:
+    _, project_id = google.auth.default()
+except Exception:
+    project_id = "mock-project-id"
+
 PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
@@ -70,6 +89,16 @@ class ClaimsProcessResponse(BaseModel):
     findings: List[str]
     agent_result: Dict[str, Any]
     photo_analyses: Dict[str, List[Detection]] # Key is URI or filename
+
+class RepairShopRequest(BaseModel):
+    zip_code: str
+    state: str
+    make: str
+    model: str
+    damage_type: str
+
+class RepairShopResponse(BaseModel):
+    shops: List[Dict[str, Any]]
 
 def read_image_from_gcs(uri: str) -> bytes:
     """Reads image content from GCS URI gs://bucket/path"""
@@ -162,6 +191,42 @@ async def process_claims(request: ClaimsRequest):
         agent_result=agent_response,
         photo_analyses=photo_analyses
     )
+
+@app.post("/find-repair-shops", response_model=RepairShopResponse)
+async def find_repair_shops(request: RepairShopRequest):
+    print(f"Finding repair shops for {request.make} {request.model} near {request.zip_code}")
+
+    if MOCK_MODE:
+        return mock_repair_shop_search()
+
+    shops = await run_repair_shop_agent(
+        request.zip_code,
+        request.state,
+        request.make,
+        request.model,
+        request.damage_type
+    )
+    return RepairShopResponse(shops=shops)
+
+def mock_repair_shop_search():
+    return {
+        "shops": [
+            {
+                "name": "Joe's Auto Body",
+                "address": "123 Main St, Springfield, IL",
+                "rating": 4.5,
+                "phone": "555-123-4567",
+                "reasoning": "High rating and close to your location."
+            },
+            {
+                "name": "Expert Collision Center",
+                "address": "456 Elm St, Springfield, IL",
+                "rating": 4.8,
+                "phone": "555-987-6543",
+                "reasoning": "Specializes in collision repair."
+            }
+        ]
+    }
 
 def mock_analysis(photo_id):
     # Return hardcoded sample data
