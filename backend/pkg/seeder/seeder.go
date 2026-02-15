@@ -3,6 +3,7 @@ package seeder
 import (
 	"encoding/csv"
 	"log"
+	"math/rand"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,6 +13,9 @@ import (
 )
 
 const DataURL = "https://raw.githubusercontent.com/hongdnn/claimwise_ai/refs/heads/main/data/insurance_claims.csv"
+
+var firstNames = []string{"John", "Jane", "Michael", "Sarah", "David", "Emily", "Robert", "Jessica", "William", "Jennifer"}
+var lastNames = []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"}
 
 func SeedPolicyHolders(db *gorm.DB) {
 	// Check if table is empty
@@ -38,6 +42,8 @@ func SeedPolicyHolders(db *gorm.DB) {
 		return
 	}
 
+	rand.Seed(time.Now().UnixNano())
+
 	for i, record := range records {
 		if i == 0 {
 			continue // Skip header
@@ -60,6 +66,8 @@ func SeedPolicyHolders(db *gorm.DB) {
 		}
 
 		policy := models.PolicyHolder{
+			FirstName:             firstNames[rand.Intn(len(firstNames))],
+			LastName:              lastNames[rand.Intn(len(lastNames))],
 			MonthsAsCustomer:      parseInt(record[0]),
 			Age:                   parseInt(record[1]),
 			PolicyNumber:          record[2],

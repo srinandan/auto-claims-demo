@@ -21,7 +21,14 @@ const AIServiceURL = "http://localhost:8000/process-claims"
 // ListClaims returns all claims
 func ListClaims(c *gin.Context) {
 	var claims []models.Claim
-	if err := database.DB.Preload("Photos").Preload("Estimates").Find(&claims).Error; err != nil {
+	query := database.DB.Preload("Photos").Preload("Estimates")
+
+	policyNumber := c.Query("policy_number")
+	if policyNumber != "" {
+		query = query.Where("policy_number = ?", policyNumber)
+	}
+
+	if err := query.Find(&claims).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -83,6 +90,32 @@ func GetPolicy(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, policy)
+}
+
+// UpdateClaim updates a claim status
+func UpdateClaim(c *gin.Context) {
+	id := c.Param("id")
+	var claim models.Claim
+	if err := database.DB.First(&claim, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Claim not found"})
+		return
+	}
+
+	var input struct {
+		Status string `json:"status"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if input.Status != "" {
+		claim.Status = input.Status
+	}
+
+	database.DB.Save(&claim)
+	c.JSON(http.StatusOK, claim)
 }
 
 // CreateClaim creates a claim with file uploads
@@ -315,6 +348,17 @@ func AnalyzeClaim(c *gin.Context) {
 				// Save Analysis Result
 				detBytes, _ := json.Marshal(detections)
 
+				// Extract unique labels for PartsDetected
+				partsMap := make(map[string]bool)
+				var partsList []string
+				for _, d := range detections {
+					if !partsMap[d.Label] {
+						partsMap[d.Label] = true
+						partsList = append(partsList, d.Label)
+					}
+				}
+				partsDetected := strings.Join(partsList, ",")
+
 				var analysis models.AnalysisResult
 				if err := database.DB.Where("photo_id = ?", photo.ID).Limit(1).Find(&analysis).Error; err != nil {
 					// Real DB error
@@ -327,12 +371,13 @@ func AnalyzeClaim(c *gin.Context) {
 						PhotoID:       photo.ID,
 						QualityScore:  "Good", // Assuming Good for now
 						Detections:    string(detBytes),
-						PartsDetected: "",
+						PartsDetected: partsDetected,
 						Severity:      "Unknown",
 					}
 					database.DB.Create(&analysis)
 				} else {
 					analysis.Detections = string(detBytes)
+					analysis.PartsDetected = partsDetected
 					database.DB.Save(&analysis)
 				}
 			}
@@ -340,14 +385,8 @@ func AnalyzeClaim(c *gin.Context) {
 	}
 
 	// Update Claim Status
-	decision := aiResponse.AgentResult.Decision
-	if decision == "Approved" {
-		claim.Status = "Simple"
-	} else if decision == "Review Required" {
-		claim.Status = "Complex"
-	} else {
-		claim.Status = "Assessed"
-	}
+	// Set to "Assessed" regardless of AI decision, to let user decide
+	claim.Status = "Assessed"
 
 	// Update Estimate
 	estimateItems, _ := json.Marshal(aiResponse.AgentResult.Estimate.Items)
