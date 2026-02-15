@@ -17,6 +17,7 @@ import (
 )
 
 const AIServiceURL = "http://localhost:8000/process-claims"
+const FindShopsURL = "http://localhost:8000/find-repair-shops"
 
 // ListClaims returns all claims
 func ListClaims(c *gin.Context) {
@@ -79,6 +80,62 @@ func GetClaim(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, claim)
+}
+
+// FindRepairShops triggers AI agent to find repair shops
+func FindRepairShops(c *gin.Context) {
+	id := c.Param("id")
+	var claim models.Claim
+	if err := database.DB.First(&claim, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Claim not found"})
+		return
+	}
+
+	var policy models.PolicyHolder
+	if err := database.DB.Where("policy_number = ?", claim.PolicyNumber).First(&policy).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Policy holder not found"})
+		return
+	}
+
+	// Determine damage type
+	damageType := claim.Description
+	if damageType == "" {
+		damageType = "auto body repair"
+	}
+
+	reqBody := map[string]string{
+		"zip_code":    fmt.Sprintf("%d", policy.InsuredZip),
+		"state":       policy.PolicyState,
+		"make":        policy.AutoMake,
+		"model":       policy.AutoModel,
+		"damage_type": damageType,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal request"})
+		return
+	}
+
+	resp, err := http.Post(FindShopsURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("AI service returned status %d", resp.StatusCode)})
+		return
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode AI response"})
+		return
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 // GetPolicy returns a policy holder by number
