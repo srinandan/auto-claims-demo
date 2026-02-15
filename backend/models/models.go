@@ -51,6 +51,8 @@ type Estimate struct {
 type PolicyHolder struct {
 	gorm.Model
 	PolicyNumber          string    `json:"policy_number" gorm:"uniqueIndex"`
+	FirstName             string    `json:"first_name"`
+	LastName              string    `json:"last_name"`
 	MonthsAsCustomer      int       `json:"months_as_customer"`
 	Age                   int       `json:"age"`
 	PolicyBindDate        time.Time `json:"policy_bind_date"`

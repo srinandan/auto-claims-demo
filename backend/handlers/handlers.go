@@ -21,7 +21,14 @@ const AIServiceURL = "http://localhost:8000/process-claims"
 // ListClaims returns all claims
 func ListClaims(c *gin.Context) {
 	var claims []models.Claim
-	if err := database.DB.Preload("Photos").Preload("Estimates").Find(&claims).Error; err != nil {
+	query := database.DB.Preload("Photos").Preload("Estimates")
+
+	policyNumber := c.Query("policy_number")
+	if policyNumber != "" {
+		query = query.Where("policy_number = ?", policyNumber)
+	}
+
+	if err := query.Find(&claims).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -4,11 +4,34 @@
       <h1 class="text-3xl font-bold text-gray-800">Claims Dashboard</h1>
       <div>
         <button
-          @click="showModal = true"
+          @click="openModal"
           class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
         >
           <span>+ New Claim</span>
         </button>
+      </div>
+    </div>
+
+    <!-- Policy Details Card -->
+    <div v-if="user" class="bg-white rounded-lg shadow p-6 mb-8 border-l-4 border-blue-500">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">My Policy Details</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Policy Number</p>
+          <p class="font-semibold text-lg">{{ user.policy_number }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Insured Vehicle</p>
+          <p class="font-semibold text-lg">{{ user.auto_year }} {{ user.auto_make }} {{ user.auto_model }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Annual Premium</p>
+          <p class="font-semibold text-lg">${{ user.policy_annual_premium }}</p>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Deductible</p>
+          <p class="font-semibold text-lg">${{ user.policy_deductible }}</p>
+        </div>
       </div>
     </div>
 
@@ -39,7 +62,7 @@
             </span>
           </div>
           <h2 class="text-xl font-bold text-gray-800 mb-1">{{ claim.customer_name }}</h2>
-          <p class="text-sm text-gray-600 mb-4">Policy: {{ claim.policy_number }}</p>
+          <p class="text-sm text-gray-600 mb-4">Date: {{ formatDate(claim.accident_date) }}</p>
 
           <div class="flex justify-between items-center text-sm text-gray-500">
             <span>{{ claim.photos ? claim.photos.length : 0 }} Photos</span>
@@ -74,28 +97,13 @@
                 </label>
                 <input
                   v-model="form.policyNumber"
-                  @blur="verifyPolicy"
-                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline bg-gray-100 cursor-not-allowed"
                   id="policyNumber"
                   type="text"
-                  placeholder="Enter Policy Number"
                   required
+                  disabled
                 />
               </div>
-              <button
-                type="button"
-                @click="verifyPolicy"
-                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mb-[1px]"
-                :disabled="verifying"
-              >
-                {{ verifying ? 'Verifying...' : 'Verify' }}
-              </button>
-            </div>
-            <div v-if="policyVerified" class="mt-2 text-green-600 text-sm font-semibold">
-              ✓ Policy Verified: {{ policyDetails.auto_year }} {{ policyDetails.auto_make }} {{ policyDetails.auto_model }}
-            </div>
-            <div v-if="policyError" class="mt-2 text-red-600 text-sm font-semibold">
-              ⚠ {{ policyError }}
             </div>
           </div>
 
@@ -262,14 +270,11 @@ const claims = ref([])
 const loading = ref(true)
 const showModal = ref(false)
 const submitting = ref(false)
-const verifying = ref(false)
-const policyVerified = ref(false)
-const policyError = ref('')
-const policyDetails = ref({})
+const user = ref(null)
 
+// Form state
 const form = reactive({
   policyNumber: '',
-  customerName: '', // Will be derived or manual
   accidentDate: '',
   description: '',
   incidentCity: '',
@@ -281,8 +286,14 @@ const form = reactive({
 })
 
 const fetchClaims = async () => {
+  if (!user.value) return
+
   try {
-    const response = await axios.get('/api/claims')
+    const response = await axios.get('/api/claims', {
+      params: {
+        policy_number: user.value.policy_number
+      }
+    })
     claims.value = response.data
   } catch (error) {
     console.error('Error fetching claims:', error)
@@ -291,29 +302,9 @@ const fetchClaims = async () => {
   }
 }
 
-const verifyPolicy = async () => {
-  if (!form.policyNumber) return
-  verifying.value = true
-  policyVerified.value = false
-  policyError.value = ''
-  policyDetails.value = {}
-
-  try {
-    const response = await axios.get(`/api/policies/${form.policyNumber}`)
-    policyDetails.value = response.data
-    policyVerified.value = true
-    // Auto-fill some data if needed, or just show confirmation
-    form.customerName = "Insured Customer" // Placeholder as CSV has no name
-  } catch (error) {
-    console.error('Policy verification failed:', error)
-    policyError.value = 'Policy not found. Please check the number.'
-  } finally {
-    verifying.value = false
-  }
-}
-
-const handleFiles = (event) => {
-  form.files = Array.from(event.target.files)
+const openModal = () => {
+  resetForm()
+  showModal.value = true
 }
 
 const closeModal = () => {
@@ -322,8 +313,9 @@ const closeModal = () => {
 }
 
 const resetForm = () => {
-  form.policyNumber = ''
-  form.customerName = ''
+  if (user.value) {
+    form.policyNumber = user.value.policy_number
+  }
   form.accidentDate = ''
   form.description = ''
   form.incidentCity = ''
@@ -332,9 +324,10 @@ const resetForm = () => {
   form.collisionType = ''
   form.severity = ''
   form.files = []
-  policyVerified.value = false
-  policyError.value = ''
-  policyDetails.value = {}
+}
+
+const handleFiles = (event) => {
+  form.files = Array.from(event.target.files)
 }
 
 const submitClaim = async () => {
@@ -347,7 +340,7 @@ const submitClaim = async () => {
 
   const formData = new FormData()
   formData.append('policy_number', form.policyNumber)
-  formData.append('customer_name', form.customerName || 'Valued Customer')
+  formData.append('customer_name', user.value ? `${user.value.first_name} ${user.value.last_name}` : 'Valued Customer')
   formData.append('description', form.description)
   formData.append('accident_date', form.accidentDate)
   formData.append('incident_city', form.incidentCity)
@@ -376,6 +369,12 @@ const submitClaim = async () => {
   }
 }
 
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString()
+}
+
 const statusColorClass = (status) => {
   switch (status) {
     case 'Simple': return 'border-green-500'
@@ -395,6 +394,17 @@ const statusBadgeClass = (status) => {
 }
 
 onMounted(() => {
-  fetchClaims()
+  const userData = localStorage.getItem('user')
+  if (userData) {
+    try {
+      user.value = JSON.parse(userData)
+      form.policyNumber = user.value.policy_number
+      fetchClaims()
+    } catch (e) {
+      console.error('Invalid user data', e)
+    }
+  } else {
+    loading.value = false
+  }
 })
 </script>
