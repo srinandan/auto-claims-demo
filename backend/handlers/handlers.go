@@ -1,0 +1,393 @@
+package handlers
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"time"
+
+	"example.com/claims-app/database"
+	"example.com/claims-app/models"
+	"example.com/claims-app/pkg/gcs"
+	"github.com/gin-gonic/gin"
+)
+
+const AIServiceURL = "http://localhost:8000/process-claims"
+
+// ListClaims returns all claims
+func ListClaims(c *gin.Context) {
+	var claims []models.Claim
+	if err := database.DB.Preload("Photos").Preload("Estimates").Find(&claims).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	bucketName := os.Getenv("BUCKET_NAME")
+
+	// Generate signed URLs for photos
+	for i := range claims {
+		for j := range claims[i].Photos {
+			// If URL is a GCS path (doesn't start with http or uploads/), generate signed URL
+			// We assume anything not starting with uploads/ is a GCS path
+			if !strings.HasPrefix(claims[i].Photos[j].URL, "uploads/") && bucketName != "" {
+				signedURL, err := gcs.GenerateSignedURL(c.Request.Context(), bucketName, claims[i].Photos[j].URL)
+				if err == nil {
+					claims[i].Photos[j].URL = signedURL
+				} else {
+					fmt.Printf("Error generating signed URL for %s: %v\n", claims[i].Photos[j].URL, err)
+				}
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, claims)
+}
+
+// GetClaim returns a single claim by ID
+func GetClaim(c *gin.Context) {
+	id := c.Param("id")
+	var claim models.Claim
+	// Preload Photos and AnalysisResult. Note: AnalysisResult is singular for Photo
+	if err := database.DB.Preload("Photos.AnalysisResult").Preload("Estimates").First(&claim, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Claim not found"})
+		return
+	}
+
+	bucketName := os.Getenv("BUCKET_NAME")
+
+	// Generate signed URLs for photos
+	for i := range claim.Photos {
+		if !strings.HasPrefix(claim.Photos[i].URL, "uploads/") && bucketName != "" {
+			signedURL, err := gcs.GenerateSignedURL(c.Request.Context(), bucketName, claim.Photos[i].URL)
+			if err == nil {
+				claim.Photos[i].URL = signedURL
+			} else {
+				fmt.Printf("Error generating signed URL for %s: %v\n", claim.Photos[i].URL, err)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, claim)
+}
+
+// GetPolicy returns a policy holder by number
+func GetPolicy(c *gin.Context) {
+	number := c.Param("number")
+	var policy models.PolicyHolder
+	if err := database.DB.Where("policy_number = ?", number).First(&policy).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Policy not found"})
+		return
+	}
+	c.JSON(http.StatusOK, policy)
+}
+
+// CreateClaim creates a claim with file uploads
+func CreateClaim(c *gin.Context) {
+	// Check if content type is multipart
+	contentType := c.Request.Header.Get("Content-Type")
+	if !strings.Contains(contentType, "multipart/form-data") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Content-Type must be multipart/form-data"})
+		return
+	}
+
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid form data: " + err.Error()})
+		return
+	}
+
+	policyNumber := c.PostForm("policy_number")
+	customerName := c.PostForm("customer_name")
+	description := c.PostForm("description")
+	accidentDateStr := c.PostForm("accident_date")
+	incidentCity := c.PostForm("incident_city")
+	incidentState := c.PostForm("incident_state")
+	incidentType := c.PostForm("incident_type")
+	collisionType := c.PostForm("collision_type")
+	severity := c.PostForm("severity")
+
+	if policyNumber == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Policy number is required"})
+		return
+	}
+
+	var accidentDate time.Time
+	if accidentDateStr != "" {
+		// Try parsing date, handle errors gracefully or default
+		accidentDate, err = time.Parse("2006-01-02", accidentDateStr)
+		if err != nil {
+			// Try RFC3339 just in case
+			accidentDate, err = time.Parse(time.RFC3339, accidentDateStr)
+			if err != nil {
+				fmt.Printf("Error parsing accident date %s: %v\n", accidentDateStr, err)
+			}
+		}
+	}
+
+	claim := models.Claim{
+		PolicyNumber:  policyNumber,
+		CustomerName:  customerName,
+		Description:   description,
+		Status:        "New",
+		AccidentDate:  accidentDate,
+		IncidentCity:  incidentCity,
+		IncidentState: incidentState,
+		IncidentType:  incidentType,
+		CollisionType: collisionType,
+		Severity:      severity,
+	}
+
+	if err := database.DB.Create(&claim).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	bucketName := os.Getenv("BUCKET_NAME")
+	if bucketName == "" {
+		// Fallback to local if bucket not set? Or error?
+		// For now, let's log warning and error out or fallback.
+		// User requirement implies bucket is mandatory.
+		fmt.Println("Warning: BUCKET_NAME env var not set. Uploads will fail.")
+	}
+
+	files := form.File["files"]
+	for _, file := range files {
+		// Open the file
+		f, err := file.Open()
+		if err != nil {
+			fmt.Printf("Failed to open uploaded file: %v\n", err)
+			continue
+		}
+
+		// Construct object name: policyNumber/filename
+		// Using policyNumber as folder
+		objectName := fmt.Sprintf("%s/%s", policyNumber, file.Filename)
+
+		// Upload to GCS
+		if bucketName != "" {
+			if err := gcs.UploadFile(context.Background(), bucketName, objectName, f); err != nil {
+				fmt.Printf("Failed to upload file %s to GCS: %v\n", objectName, err)
+				f.Close()
+				continue
+			}
+
+			photo := models.Photo{
+				ClaimID: claim.ID,
+				URL:     objectName, // Store the object path
+			}
+			database.DB.Create(&photo)
+		} else {
+			f.Close()
+			// Fallback to local storage if bucket not defined (legacy support or error?)
+			// I'll return error to force configuration
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "BUCKET_NAME not configured"})
+			return
+		}
+		f.Close()
+	}
+
+	// Reload to return full object
+	database.DB.Preload("Photos").First(&claim, claim.ID)
+	// We might want to sign the URLs in the response here too, but for creation it might be okay to return raw path or nothing?
+	// Consistent behavior: return signed URLs.
+	for i := range claim.Photos {
+		if !strings.HasPrefix(claim.Photos[i].URL, "uploads/") && bucketName != "" {
+			signedURL, err := gcs.GenerateSignedURL(c.Request.Context(), bucketName, claim.Photos[i].URL)
+			if err == nil {
+				claim.Photos[i].URL = signedURL
+			}
+		}
+	}
+
+	c.JSON(http.StatusCreated, claim)
+}
+
+// AnalyzeClaim triggers AI analysis for a claim
+func AnalyzeClaim(c *gin.Context) {
+	id := c.Param("id")
+	var claim models.Claim
+	if err := database.DB.Preload("Photos").First(&claim, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Claim not found"})
+		return
+	}
+
+	bucketName := os.Getenv("BUCKET_NAME")
+	if bucketName == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "BUCKET_NAME not configured"})
+		return
+	}
+
+	// Initial status update
+	claim.Status = "Analyzing"
+	database.DB.Save(&claim)
+
+	// Prepare JSON request to AI Service with GCS URIs
+	var fileURIs []string
+	for _, photo := range claim.Photos {
+		if !strings.HasPrefix(photo.URL, "uploads/") {
+			// Construct gs:// URI
+			uri := fmt.Sprintf("gs://%s/%s", bucketName, photo.URL)
+			fileURIs = append(fileURIs, uri)
+		} else {
+			// Skip local files or handle them?
+			// The new AI service expects GCS URIs.
+			fmt.Printf("Skipping local file %s for analysis\n", photo.URL)
+		}
+	}
+
+	requestBody, err := json.Marshal(map[string]interface{}{
+		"file_uris": fileURIs,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal request body: " + err.Error()})
+		return
+	}
+
+	// Call AI Service
+	req, err := http.NewRequest("POST", AIServiceURL, bytes.NewBuffer(requestBody))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request: " + err.Error()})
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("AI service returned status %d", resp.StatusCode)})
+		return
+	}
+
+	// Parse Response
+	// Structure matches ClaimsProcessResponse in Python
+	var aiResponse struct {
+		Findings    []string `json:"findings"`
+		AgentResult struct {
+			Decision  string `json:"decision"`
+			Reasoning string `json:"reasoning"`
+			Estimate  struct {
+				Items []struct {
+					Part string  `json:"part"`
+					Cost float64 `json:"cost"`
+				} `json:"items"`
+				TotalCost float64 `json:"total_cost"`
+			} `json:"estimate"`
+		} `json:"agent_result"`
+		PhotoAnalyses map[string][]struct {
+			Label string    `json:"label"`
+			Box   []float64 `json:"box"`
+			Score float64   `json:"score"`
+		} `json:"photo_analyses"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&aiResponse); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode AI response: " + err.Error()})
+		return
+	}
+
+	// Update Analysis Results for Photos
+	for filename, detections := range aiResponse.PhotoAnalyses {
+		// Find the photo corresponding to this filename
+		// The key in PhotoAnalyses from AI service might be the full GCS URI or just the filename?
+		// We need to check how AI service returns the keys.
+		// Usually it returns the filename or the identifier we sent.
+		// If we sent gs://bucket/policy/filename, it might return that.
+		// Let's assume AI service keys by the input string (the URI) or the filename.
+		// I'll implement logic in AI service to return keys that we can match.
+		// Safest is to match against the URI or the filename part.
+
+		for _, photo := range claim.Photos {
+			// Construct URI again to match
+			uri := fmt.Sprintf("gs://%s/%s", bucketName, photo.URL)
+
+			// Check if key matches URI or ends with filename (if AI service extracts filename)
+			if filename == uri || strings.HasSuffix(uri, filename) || strings.HasSuffix(filename, photo.URL) {
+				// Save Analysis Result
+				detBytes, _ := json.Marshal(detections)
+
+				var analysis models.AnalysisResult
+				if err := database.DB.Where("photo_id = ?", photo.ID).Limit(1).Find(&analysis).Error; err != nil {
+					// Real DB error
+					fmt.Printf("Error querying analysis: %v\n", err)
+				}
+
+				if analysis.ID == 0 {
+					// Record not found (ID is 0), create new
+					analysis = models.AnalysisResult{
+						PhotoID:       photo.ID,
+						QualityScore:  "Good", // Assuming Good for now
+						Detections:    string(detBytes),
+						PartsDetected: "",
+						Severity:      "Unknown",
+					}
+					database.DB.Create(&analysis)
+				} else {
+					analysis.Detections = string(detBytes)
+					database.DB.Save(&analysis)
+				}
+			}
+		}
+	}
+
+	// Update Claim Status
+	decision := aiResponse.AgentResult.Decision
+	if decision == "Approved" {
+		claim.Status = "Simple"
+	} else if decision == "Review Required" {
+		claim.Status = "Complex"
+	} else {
+		claim.Status = "Assessed"
+	}
+
+	// Update Estimate
+	estimateItems, _ := json.Marshal(aiResponse.AgentResult.Estimate.Items)
+	totalCost := aiResponse.AgentResult.Estimate.TotalCost
+
+	// Create/Update Estimate
+	var estimate models.Estimate
+	if err := database.DB.Where("claim_id = ?", claim.ID).Limit(1).Find(&estimate).Error; err != nil {
+		fmt.Printf("Error querying estimate: %v\n", err)
+	}
+
+	if estimate.ID == 0 {
+		estimate = models.Estimate{
+			ClaimID:     claim.ID,
+			TotalAmount: totalCost,
+			Source:      "AI Agent",
+			Items:       string(estimateItems),
+		}
+		database.DB.Create(&estimate)
+	} else {
+		estimate.TotalAmount = totalCost
+		estimate.Source = "AI Agent"
+		estimate.Items = string(estimateItems)
+		database.DB.Save(&estimate)
+	}
+
+	database.DB.Save(&claim)
+
+	// Return updated claim
+	database.DB.Preload("Photos.AnalysisResult").Preload("Estimates").First(&claim, id)
+
+	// Sign URLs for response
+	for i := range claim.Photos {
+		if !strings.HasPrefix(claim.Photos[i].URL, "uploads/") && bucketName != "" {
+			signedURL, err := gcs.GenerateSignedURL(c.Request.Context(), bucketName, claim.Photos[i].URL)
+			if err == nil {
+				claim.Photos[i].URL = signedURL
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, claim)
+}
