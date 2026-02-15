@@ -2,88 +2,49 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-This project is an Auto Claims processing application that allows users to submit claims and automatically analyzes images for damage using an AI service.
+This project is an **Auto Claims Processing Application** that streamlines the claims process by allowing users to submit claims and automatically analyzing vehicle images for damage using an AI service.
 
-## Project Structure
+## Architecture Overview
 
-The project is divided into three main components:
+The system consists of three main microservices:
 
-*   **Frontend (`frontend/`)**: A Vue 3 + Vite application for the user interface, styled with Tailwind CSS v4.
-*   **Backend (`backend/`)**: A Go (Gin) REST API that manages claims and interacts with the database.
-*   **AI Service (`ai-service/`)**: A Python (FastAPI) service that analyzes images for damage. It can run in mock mode or use real inference (mocked or using Vertex AI/Vision API).
+1.  **[Frontend](./frontend/README.md)**: A responsive web interface built with **Vue 3**, **Vite**, and **Tailwind CSS v4** for users to submit claims and view results.
+2.  **[Backend](./backend/README.md)**: A robust REST API built with **Go (Gin)** and **SQLite** that manages claim data, policies, and orchestration.
+3.  **[AI Service](./ai-service/README.md)**: A specialized service built with **Python (FastAPI)** that leverages **Google Cloud Vertex AI / Gemini** (or a mock implementation) to detect vehicle damage from images.
 
 ## Prerequisites
 
 Ensure you have the following installed:
 
-*   [Node.js](https://nodejs.org/) (v18 or later)
-*   [Go](https://go.dev/) (v1.23 or later)
-*   [Python](https://www.python.org/) (v3.10 or later) and [uv](https://docs.astral.sh/uv/)
+*   [Node.js](https://nodejs.org/) (v18+)
+*   [Go](https://go.dev/) (v1.23+)
+*   [Python](https://www.python.org/) (v3.10+) and [uv](https://docs.astral.sh/uv/)
 *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud`)
 
-## Getting Started
+## Quick Start
 
-### 1. Backend
+Detailed instructions for each service are available in their respective directories, but here is a quick summary to get everything running locally.
 
-The backend handles API requests and database interactions.
-
-**Setup & Run:**
-
+### 1. Start the Backend
 ```bash
 cd backend
 make local-backend
+# Runs on http://localhost:8080
 ```
 
-This command will:
-*   Set necessary environment variables (`PROJECT_ID`, `PROJECT_NUMBER`, `REGION`, `_COMMIT_SHA`).
-*   Download Go dependencies (`go mod tidy`).
-*   Run the server on `http://localhost:8080`.
-
-### 2. AI Service
-
-The AI service analyzes images uploaded for claims.
-
-**Setup & Run:**
-
+### 2. Start the AI Service
 ```bash
 cd ai-service
 make local-ai-service
+# Runs on http://localhost:8000
 ```
 
-This command will:
-*   Set necessary environment variables.
-*   Run the FastAPI server using `uv` on `http://localhost:8000`.
-*   Note: By default, it runs in `MOCK_MODE=false`. To run in mock mode, set `MOCK_MODE=true` in the Makefile or environment.
-
-### 3. Frontend
-
-The frontend provides the user interface for submitting claims.
-
-**Setup & Run:**
-
+### 3. Start the Frontend
 ```bash
 cd frontend
 make local-frontend
+# Runs on http://localhost:5173
 ```
-
-This command will:
-*   Set necessary environment variables.
-*   Install Node.js dependencies (`npm install`).
-*   Start the Vite development server.
-
-## API Endpoints
-
-### Backend
-*   `GET /ping`: Health check.
-*   `GET /api/claims`: List all claims.
-*   `GET /api/claims/:id`: Get a specific claim.
-*   `POST /api/claims`: Create a new claim.
-*   `POST /api/claims/:id/analyze`: Trigger analysis for a claim.
-*   `GET /api/policies/:number`: Get a policy by number.
-
-### AI Service
-*   `POST /analyze`: Analyzes an uploaded image for damage.
-*   `POST /process-claims`: Processes a batch of claims images.
 
 ## License
 

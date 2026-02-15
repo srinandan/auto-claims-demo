@@ -1,5 +1,46 @@
-# Vue 3 + Vite
+# Auto Claims Frontend
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This is the frontend application for the Auto Claims Demo, built with **Vue 3**, **Vite**, and **Tailwind CSS v4**.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Tech Stack
+
+-   **Framework**: [Vue 3](https://vuejs.org/)
+-   **Build Tool**: [Vite](https://vitejs.dev/)
+-   **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+-   **HTTP Client**: [Axios](https://axios-http.com/)
+
+## Prerequisites
+
+-   Node.js (v18 or later)
+-   npm
+
+## Setup & Run
+
+The project includes a `Makefile` for easy setup.
+
+### Run Locally
+
+```bash
+make local-frontend
+```
+
+This command will:
+1.  Install dependencies (`npm install`).
+2.  Start the development server (`npm run dev`).
+3.  The app will be available at `http://localhost:5173` (or another port if 5173 is busy).
+
+### Build for Production
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+-   `src/`: Source code
+    -   `components/`: Vue components
+    -   `views/`: Page views
+    -   `router/`: Vue Router configuration
+    -   `assets/`: Static assets
+-   `public/`: Public assets
+-   `vite.config.js`: Vite configuration
