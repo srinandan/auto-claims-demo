@@ -51,6 +51,7 @@ func main() {
 		api.PUT("/claims/:id", handlers.UpdateClaim)
 		api.POST("/claims/:id/analyze", handlers.AnalyzeClaim)
 		api.POST("/claims/:id/repair-shops", handlers.FindRepairShops)
+		api.POST("/claims/:id/book-appointment", handlers.BookAppointment)
 		api.GET("/policies/:number", handlers.GetPolicy)
 	}
 

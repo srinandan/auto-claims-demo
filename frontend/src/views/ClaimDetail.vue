@@ -41,29 +41,95 @@
 
     <!-- Repair Shops Modal -->
     <div v-if="showRepairShops" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <div class="p-4 border-b flex justify-between items-center">
-          <h2 class="text-xl font-bold">Nearby Repair Shops</h2>
-          <button @click="showRepairShops = false" class="text-gray-500 hover:text-gray-700">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col h-[600px]">
+
+        <!-- Header -->
+        <div class="p-4 border-b flex justify-between items-center shrink-0">
+          <h2 class="text-xl font-bold">
+            <span v-if="isChatOpen">Book Appointment</span>
+            <span v-else-if="selectedShop">{{ selectedShop.name }}</span>
+            <span v-else>Nearby Repair Shops</span>
+          </h2>
+          <button @click="closeRepairShops" class="text-gray-500 hover:text-gray-700">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div class="p-4 overflow-y-auto flex-grow">
-          <div v-if="loadingShops" class="text-center py-8">
+        <!-- Content Area -->
+        <div class="flex-grow overflow-hidden flex flex-col">
+
+          <!-- Loading State -->
+          <div v-if="loadingShops" class="text-center py-8 flex-grow flex items-center justify-center">
             <p>Searching for the best shops near you...</p>
           </div>
 
-          <div v-else-if="repairShops.length === 0" class="text-center py-8 text-gray-500">
-            No repair shops found.
+          <!-- Chat View -->
+          <div v-else-if="isChatOpen" class="flex flex-col h-full">
+            <div class="flex-grow overflow-y-auto p-4 space-y-4" ref="chatContainer">
+                <div v-for="(msg, idx) in chatMessages" :key="idx" :class="['flex', msg.sender === 'user' ? 'justify-end' : 'justify-start']">
+                    <div :class="['max-w-[80%] rounded-lg px-4 py-2', msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800']">
+                        {{ msg.text }}
+                    </div>
+                </div>
+                <div v-if="chatLoading" class="flex justify-start">
+                     <div class="bg-gray-100 text-gray-500 rounded-lg px-4 py-2 italic text-sm">Typing...</div>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50 flex gap-2 shrink-0">
+                <input
+                    v-model="chatInput"
+                    @keyup.enter="sendMessage"
+                    type="text"
+                    class="flex-grow border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Type your message..."
+                    :disabled="chatLoading"
+                />
+                <button
+                    @click="sendMessage"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold disabled:opacity-50"
+                    :disabled="chatLoading || !chatInput.trim()"
+                >
+                    Send
+                </button>
+            </div>
           </div>
 
-          <div v-else class="space-y-4">
-            <div v-for="(shop, index) in repairShops" :key="index" class="border rounded p-4 hover:bg-gray-50">
+          <!-- Detail View -->
+          <div v-else-if="selectedShop" class="p-6 overflow-y-auto h-full">
+             <div class="mb-6">
+                <div v-if="selectedShop.rating" class="flex items-center text-yellow-600 mb-2">
+                   <span class="text-lg mr-1">★</span> <span class="font-bold">{{ selectedShop.rating }}</span>
+                </div>
+                <p class="text-gray-600 mb-1">{{ selectedShop.address }}</p>
+                <p v-if="selectedShop.phone" class="text-gray-600 mb-4">{{ selectedShop.phone }}</p>
+
+                <div v-if="selectedShop.reasoning" class="bg-blue-50 p-4 rounded border border-blue-100 text-blue-800 italic">
+                    "{{ selectedShop.reasoning }}"
+                </div>
+             </div>
+
+             <div class="flex gap-4">
+                 <button @click="startBooking" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded text-center">
+                    Book Appointment
+                 </button>
+             </div>
+          </div>
+
+          <!-- List View -->
+          <div v-else class="h-full overflow-y-auto p-4 space-y-4">
+            <div v-if="repairShops.length === 0" class="text-center py-8 text-gray-500">
+                No repair shops found.
+            </div>
+            <div
+                v-for="(shop, index) in repairShops"
+                :key="index"
+                class="border rounded p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                @click="selectShop(shop)"
+            >
               <div class="flex justify-between items-start">
-                <h3 class="font-bold text-lg">{{ shop.name }}</h3>
+                <h3 class="font-bold text-lg text-blue-600">{{ shop.name }}</h3>
                 <span v-if="shop.rating" class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded flex items-center">
                   ★ {{ shop.rating }}
                 </span>
@@ -75,8 +141,15 @@
           </div>
         </div>
 
-        <div class="p-4 border-t bg-gray-50 text-right">
-          <button @click="showRepairShops = false" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
+        <!-- Footer Actions -->
+        <div class="p-4 border-t bg-gray-50 text-right shrink-0" v-if="!loadingShops">
+          <button v-if="isChatOpen" @click="closeChat" class="mr-2 text-gray-600 hover:text-gray-800 px-4 py-2">
+            Cancel Booking
+          </button>
+          <button v-if="selectedShop && !isChatOpen" @click="backToShops" class="mr-2 text-gray-600 hover:text-gray-800 px-4 py-2">
+            Back to List
+          </button>
+          <button @click="closeRepairShops" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
             Close
           </button>
         </div>
@@ -247,7 +320,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 
@@ -261,6 +334,15 @@ const imageRef = ref(null)
 const showRepairShops = ref(false)
 const repairShops = ref([])
 const loadingShops = ref(false)
+
+// Shop & Chat State
+const selectedShop = ref(null)
+const isChatOpen = ref(false)
+const chatMessages = ref([])
+const chatInput = ref('')
+const sessionId = ref('')
+const chatLoading = ref(false)
+const chatContainer = ref(null)
 
 // Detections for the selected photo
 const detections = computed(() => {
@@ -314,6 +396,8 @@ const findRepairShops = async () => {
   showRepairShops.value = true
   loadingShops.value = true
   repairShops.value = []
+  selectedShop.value = null
+  isChatOpen.value = false
 
   try {
     const response = await axios.post(`/api/claims/${route.params.id}/repair-shops`)
@@ -327,6 +411,90 @@ const findRepairShops = async () => {
   } finally {
     loadingShops.value = false
   }
+}
+
+const selectShop = (shop) => {
+    selectedShop.value = shop
+    isChatOpen.value = false
+}
+
+const backToShops = () => {
+    selectedShop.value = null
+    isChatOpen.value = false
+}
+
+const closeRepairShops = () => {
+    showRepairShops.value = false
+    selectedShop.value = null
+    isChatOpen.value = false
+}
+
+const startBooking = async () => {
+    isChatOpen.value = true
+    sessionId.value = Math.random().toString(36).substring(2, 15)
+    chatMessages.value = []
+
+    // Initial Trigger
+    chatLoading.value = true
+    try {
+        const response = await axios.post(`/api/claims/${route.params.id}/book-appointment`, {
+            session_id: sessionId.value,
+            message: "Hello, I'd like to book an appointment.",
+            shop_name: selectedShop.value.name,
+            customer_name: claim.value.customer_name // Might be needed for context
+        })
+
+        chatMessages.value.push({ sender: 'user', text: "I'd like to book an appointment." })
+
+        if (response.data && response.data.agent_message) {
+            chatMessages.value.push({ sender: 'agent', text: response.data.agent_message })
+        }
+    } catch (e) {
+        console.error(e)
+        chatMessages.value.push({ sender: 'agent', text: "Sorry, I'm having trouble connecting." })
+    } finally {
+        chatLoading.value = false
+        scrollToBottom()
+    }
+}
+
+const closeChat = () => {
+    isChatOpen.value = false
+}
+
+const sendMessage = async () => {
+    if (!chatInput.value.trim()) return
+
+    const text = chatInput.value
+    chatMessages.value.push({ sender: 'user', text })
+    chatInput.value = ''
+    chatLoading.value = true
+
+    scrollToBottom()
+
+    try {
+         const response = await axios.post(`/api/claims/${route.params.id}/book-appointment`, {
+            session_id: sessionId.value,
+            message: text,
+            shop_name: selectedShop.value.name
+        })
+
+        if (response.data && response.data.agent_message) {
+            chatMessages.value.push({ sender: 'agent', text: response.data.agent_message })
+        }
+    } catch (e) {
+        console.error(e)
+        chatMessages.value.push({ sender: 'agent', text: "Sorry, I'm having trouble connecting." })
+    } finally {
+        chatLoading.value = false
+        scrollToBottom()
+    }
+}
+
+const scrollToBottom = () => {
+    nextTick(() => {
+        if (chatContainer.value) chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+    })
 }
 
 const updateStatus = async (status) => {
