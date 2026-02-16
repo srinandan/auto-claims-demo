@@ -127,6 +127,10 @@ def read_image_from_gcs(uri: str) -> bytes:
     blob = bucket.blob(blob_name)
     return blob.download_as_bytes()
 
+@app.get("/ping")
+async def ping():
+    return {"message": "AI Service is running"}
+
 @app.post("/analyze", response_model=AnalysisResponse)
 async def analyze_image(
     file: UploadFile = File(...),

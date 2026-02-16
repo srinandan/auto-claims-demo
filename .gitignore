@@ -114,3 +114,5 @@ requirements.txt
 
 yolov8n.pt
 backend/claims.db
+ai-service/uv.lock
+frontend/package-lock.json
