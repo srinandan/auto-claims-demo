@@ -21,6 +21,25 @@ import base64
 from typing import List, Dict, Any, Optional
 from google.cloud import storage
 import io
+import logging
+
+# OpenTelemetry Imports
+try:
+    from opentelemetry import trace, metrics
+    from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+    from opentelemetry.exporter.cloud_monitoring import CloudMonitoringMetricsExporter
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.sdk.metrics import MeterProvider
+    from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.instrumentation.requests import RequestsInstrumentor
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
+    from opentelemetry.instrumentation.system_metrics import SystemMetricsInstrumentor
+    OTEL_AVAILABLE = True
+except ImportError:
+    print("OpenTelemetry not available, skipping instrumentation.")
+    OTEL_AVAILABLE = False
 
 # Local imports
 from vision import detect_bounding_boxes
@@ -54,6 +73,46 @@ PROJECT_ID = os.environ.setdefault("GOOGLE_CLOUD_PROJECT", project_id)
 REGION = os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 os.environ.setdefault("GOOGLE_CLOUD_QUOTA_PROJECT", project_id)
+
+# Setup OpenTelemetry
+if OTEL_AVAILABLE and PROJECT_ID != "mock-project-id":
+    try:
+        # Initialize Tracer Provider
+        tracer_provider = TracerProvider()
+
+        # Initialize Cloud Trace Exporter
+        cloud_trace_exporter = CloudTraceSpanExporter(project_id=PROJECT_ID)
+
+        # Add Span Processor
+        tracer_provider.add_span_processor(
+            BatchSpanProcessor(cloud_trace_exporter)
+        )
+
+        trace.set_tracer_provider(tracer_provider)
+
+        # Initialize Meter Provider
+        metric_exporter = CloudMonitoringMetricsExporter(project_id=PROJECT_ID)
+        reader = PeriodicExportingMetricReader(metric_exporter)
+        meter_provider = MeterProvider(metric_readers=[reader])
+        metrics.set_meter_provider(meter_provider)
+
+        # Instrument FastAPI
+        FastAPIInstrumentor().instrument_app(app)
+
+        # Instrument Requests
+        RequestsInstrumentor().instrument()
+
+        # Instrument Logging
+        LoggingInstrumentor().instrument(set_logging_format=True)
+
+        # Instrument System Metrics
+        SystemMetricsInstrumentor().instrument(meter_provider=meter_provider)
+
+        print("OpenTelemetry instrumentation enabled with Cloud Trace & Monitoring Exporters.")
+    except Exception as e:
+        print(f"Failed to initialize OpenTelemetry: {e}")
+else:
+    print(f"OpenTelemetry skipped (Project ID: {PROJECT_ID})")
 
 # Initialize storage client once
 storage_client = None
