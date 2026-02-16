@@ -15,6 +15,9 @@
 package main
 
 import (
+	"os"
+	"strings"
+
 	"example.com/claims-app/database"
 	"example.com/claims-app/handlers"
 	"example.com/claims-app/pkg/seeder"
@@ -29,13 +32,18 @@ func main() {
 	r := gin.Default()
 
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+	allowedOrigins := os.Getenv("ALLOWED_ORIGINS")
+	if allowedOrigins != "" {
+		config.AllowOrigins = strings.Split(allowedOrigins, ",")
+	} else {
+		config.AllowOrigins = []string{"http://localhost:5173"}
+	}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	r.Use(cors.New(config))
 
-    // Serve uploaded files
-    r.Static("/uploads", "./uploads")
+	// Serve uploaded files
+	r.Static("/uploads", "./uploads")
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
