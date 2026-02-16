@@ -1,6 +1,6 @@
 # Auto Claims Frontend
 
-This is the frontend application for the Auto Claims Demo, built with **Vue 3**, **Vite**, and **Tailwind CSS v4**.
+This is the frontend application for the Auto Claims Demo, providing an interface for claim submission and AI-driven assessment results.
 
 ## Tech Stack
 

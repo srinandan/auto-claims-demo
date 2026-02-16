@@ -1,4 +1,4 @@
-# assessor-agent
+# processor-agent
 
 ReAct agent with A2A protocol [experimental]
 Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.36.0`
@@ -6,7 +6,7 @@ Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.c
 ## Project Structure
 
 ```
-assessor-agent/
+processor-agent/
 ├── app/         # Core agent code
 │   ├── agent.py               # Main agent logic
 │   ├── fast_api_app.py        # FastAPI Backend server
@@ -47,10 +47,10 @@ make install && make playground
 | `make playground`    | Launch local development environment                                                        |
 | `make lint`          | Run code quality checks                                                                     |
 | `make test`          | Run unit and integration tests                                                              |
-| `make deploy`             | Deploy agent to Cloud Run                                                                   |
-| `make local-assessor-agent` | Launch local development server on port 8081                                             |
-| `make inspector`          | Launch A2A Protocol Inspector                                                               |
-| `make setup-dev-env`      | Set up development environment resources using Terraform                                   |
+| `make deploy`              | Deploy agent to Cloud Run                                                                   |
+| `make local-processor-agent` | Launch local development server on port 8082                                             |
+| `make inspector`           | Launch A2A Protocol Inspector                                                               |
+| `make setup-dev-env`       | Set up development environment resources using Terraform                                   |
 
 For full command options and usage, refer to the [Makefile](Makefile).
 

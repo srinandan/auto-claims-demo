@@ -44,7 +44,7 @@ This command will:
 -   `GET /api/claims/:id`: Get specific claim details
 -   `POST /api/claims`: Create a new claim
 -   `PUT /api/claims/:id`: Update a claim
--   `POST /api/claims/:id/analyze`: Trigger AI analysis for a claim
+- `POST /api/claims/:id/analyze`: Trigger AI analysis and sequential agentic flow for a claim
 -   `POST /api/claims/:id/repair-shops`: Find repair shops for a claim
 
 ### Policies

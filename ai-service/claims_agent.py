@@ -22,74 +22,28 @@ import json
 import uuid
 import re
 
-# Tool for generating mock repair costs
-def generate_repair_cost(severity: str) -> dict:
-    """Generates itemized repair costs based on severity."""
-    severity = severity.lower()
-    if "simple" in severity:
-        return {
-            "items": [
-                {"part": "Bumper Repair", "cost": 350.00},
-                {"part": "Labor (2 hours)", "cost": 200.00},
-                {"part": "Paint Touch-up", "cost": 150.00}
-            ],
-            "total_labor": 200.00,
-            "total_parts": 500.00,
-            "total_cost": 700.00
-        }
-    else: # Complex
-        return {
-            "items": [
-                {"part": "Fender Replacement", "cost": 1200.00},
-                {"part": "Door Panel Repair", "cost": 800.00},
-                {"part": "Labor (10 hours)", "cost": 1000.00},
-                {"part": "Painting & Blending", "cost": 1500.00}
-            ],
-            "total_labor": 1000.00,
-            "total_parts": 3500.00,
-            "total_cost": 4500.00
-        }
-
-# --- Agents Definition ---
-MODEL_NAME = "gemini-2.5-flash"
 
 ASSESSOR_AGENT_URL = os.getenv("ASSESSOR_AGENT_URL")
+PROCESSOR_AGENT_URL = os.getenv("PROCESSOR_AGENT_URL")
 
 # Assessor Agent
 assessor_agent = RemoteA2aAgent(
-        name="assessor_agent_test",
+        name="assessor_agent",
         description=(
             "Assess damage severity based on findings."
         ),
-        agent_card=f"{ASSESSOR_AGENT_URL}{AGENT_CARD_WELL_KNOWN_PATH}",
+        agent_card=f"{ASSESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}",
         # a2a_client_factory=factory,
 )
 
 # Processor Agent
-processor_agent = LlmAgent(
-    name="ProcessorAgent",
-    model=MODEL_NAME,
-    description="Generate repair cost and decision.",
-    instruction="""
-    You are a claims processor.
-    Based on the 'severity' determined by the AssessorAgent:
-    1. Call the 'generate_repair_cost' tool with the severity.
-    2. Determine the decision:
-       - If Simple: 'Approved'.
-       - If Complex: 'Review Required'.
-
-    Output a valid JSON object with the following structure:
-    {
-        "decision": "Approved" or "Review Required",
-        "estimate": {result from generate_repair_cost tool},
-        "reasoning": "Brief explanation of the decision."
-    }
-    IMPORTANT: Ensure the 'estimate' field directly contains the object returned by the tool (it has keys "items", "total_labor", "total_parts", "total_cost"). Do NOT wrap it in another key like 'generate_repair_cost_response'.
-    
-    Do not output markdown code blocks. Just the raw JSON string.
-    """,
-    tools=[generate_repair_cost],
-    output_key="final_result"
+processor_agent = RemoteA2aAgent(
+        name="processor_agent",
+        description=(
+            "Generate repair cost and decision."
+        ),
+        agent_card=f"{PROCESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}",
+        # a2a_client_factory=factory,
 )
 
 # Sequential Agent

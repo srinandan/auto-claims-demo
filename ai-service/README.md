@@ -17,9 +17,15 @@ This service handles image analysis for detecting vehicle damage using **Google 
 
 ## Configuration
 
-### Mock Mode
-You can run the service in **Mock Mode** to avoid calling actual Google Cloud APIs. This is useful for local development and testing without incurring costs or needing full credentials.
+### Environment Variables
+The service uses the following environment variables (handled by `Makefile` for local dev):
 
+- `ASSESSOR_AGENT_URL`: URL of the Assessor Agent (default: `http://localhost:8081`).
+- `PROCESSOR_AGENT_URL`: URL of the Processor Agent (default: `http://localhost:8082`).
+- `GOOGLE_CLOUD_PROJECT`: Project ID for BigQuery analytics and Vertex AI.
+
+### Mock Mode
+You can run the service in **Mock Mode** to avoid calling actual Google Cloud APIs.
 Set `MOCK_MODE=true` in your environment or `Makefile`.
 
 ## Setup & Run
