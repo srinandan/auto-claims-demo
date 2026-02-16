@@ -12,7 +12,7 @@ dependencies = [
     "requests>=2.32.5",
     "uvicorn>=0.40.0",
     "google-genai",
-    "google-adk",
+    "google-adk[a2a]",
     "google-cloud-storage>=3.9.0",
     "ultralytics>=8.4.13",
     "opencv-python-headless>=4.13.0.92",
