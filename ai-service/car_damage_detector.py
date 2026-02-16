@@ -29,10 +29,10 @@ logger = logging.getLogger(__name__)
 
 class CarDamageDetector:
     """
-    Car damage detection system using YOLOv8 model.
+    Car damage detection system using YOLOv11 model.
 
     This class handles the detection and classification of various types
-    of car damage including scratches, dents, paint damage, and broken parts.
+    of car damage using a fine-tuned YOLOv11 model.
     """
 
     def __init__(self, model_path: Optional[str] = None, confidence_threshold: float = 0.5):
@@ -45,34 +45,51 @@ class CarDamageDetector:
         """
         self.confidence_threshold = confidence_threshold
         self.model_path = hf_hub_download(
-            repo_id="nezahatkorkmaz/car-damage-level-detection-yolov8",
-            filename="car-damage.pt",
-            token=os.getenv("HF_TOKEN")
+            repo_id="vineetsarpal/yolov11n-car-damage",
+            filename="best.pt",
+            # token=os.getenv("HF_TOKEN") # Optional if public
         )
-        #self.model_path = model_path or "yolov8n.pt"  # Default to nano model
         self.device = self._get_device()
         self.model = None
-        self.class_names = {
-            0: "scratch",
-            1: "dent",
-            2: "broken_part",
-            3: "paint_damage"
-        }
+        self.class_names = {}
 
         # Damage severity mapping based on area and type
         self.severity_mapping = {
-            "scratch": {"light": (0, 5), "moderate": (5, 15), "severe": (15, 100)},
-            "dent": {"light": (0, 3), "moderate": (3, 10), "severe": (10, 100)},
-            "broken_part": {"light": (0, 2), "moderate": (2, 8), "severe": (8, 100)},
-            "paint_damage": {"light": (0, 4), "moderate": (4, 12), "severe": (12, 100)}
+            # Glass/Lights - lower thresholds for severity
+            "Front-windscreen-damage": {"light": (0, 2), "moderate": (2, 10), "severe": (10, 100)},
+            "Headlight-damage": {"light": (0, 5), "moderate": (5, 20), "severe": (20, 100)},
+            "Rear-windscreen-Damage": {"light": (0, 2), "moderate": (2, 10), "severe": (10, 100)},
+            "Sidemirror-Damage": {"light": (0, 10), "moderate": (10, 30), "severe": (30, 100)},
+            "Taillight-Damage": {"light": (0, 5), "moderate": (5, 20), "severe": (20, 100)},
+
+            # Body Parts/Dents
+            "Runningboard-Damage": {"light": (0, 5), "moderate": (5, 15), "severe": (15, 100)},
+            "bonnet-dent": {"light": (0, 3), "moderate": (3, 10), "severe": (10, 100)},
+            "boot-dent": {"light": (0, 3), "moderate": (3, 10), "severe": (10, 100)},
+            "doorouter-dent": {"light": (0, 3), "moderate": (3, 10), "severe": (10, 100)},
+            "fender-dent": {"light": (0, 3), "moderate": (3, 10), "severe": (10, 100)},
+            "front-bumper-dent": {"light": (0, 3), "moderate": (3, 12), "severe": (12, 100)},
+            "quaterpanel-dent": {"light": (0, 2), "moderate": (2, 8), "severe": (8, 100)},
+            "rear-bumper-dent": {"light": (0, 3), "moderate": (3, 12), "severe": (12, 100)},
+            "roof-dent": {"light": (0, 2), "moderate": (2, 8), "severe": (8, 100)},
         }
 
         # Cost estimation per damage type (base costs in USD)
         self.cost_estimates = {
-            "scratch": {"light": 100, "moderate": 300, "severe": 800},
-            "dent": {"light": 200, "moderate": 500, "severe": 1200},
-            "broken_part": {"light": 300, "moderate": 800, "severe": 2000},
-            "paint_damage": {"light": 150, "moderate": 400, "severe": 900}
+            "Front-windscreen-damage": {"light": 300, "moderate": 600, "severe": 1200},
+            "Headlight-damage": {"light": 200, "moderate": 500, "severe": 1000},
+            "Rear-windscreen-Damage": {"light": 300, "moderate": 500, "severe": 900},
+            "Runningboard-Damage": {"light": 200, "moderate": 400, "severe": 800},
+            "Sidemirror-Damage": {"light": 100, "moderate": 250, "severe": 500},
+            "Taillight-Damage": {"light": 150, "moderate": 300, "severe": 600},
+            "bonnet-dent": {"light": 250, "moderate": 600, "severe": 1500},
+            "boot-dent": {"light": 250, "moderate": 600, "severe": 1500},
+            "doorouter-dent": {"light": 200, "moderate": 500, "severe": 1200},
+            "fender-dent": {"light": 200, "moderate": 450, "severe": 1000},
+            "front-bumper-dent": {"light": 350, "moderate": 700, "severe": 1600},
+            "quaterpanel-dent": {"light": 400, "moderate": 900, "severe": 2200},
+            "rear-bumper-dent": {"light": 350, "moderate": 700, "severe": 1600},
+            "roof-dent": {"light": 500, "moderate": 1200, "severe": 3000},
         }
 
         self._load_model()
@@ -89,18 +106,13 @@ class CarDamageDetector:
     def _load_model(self) -> None:
         """Load the YOLO model for damage detection."""
         try:
-            # Check if custom model exists
             if os.path.exists(self.model_path):
-                logger.info(f"Loading custom model from {self.model_path}")
+                logger.info(f"Loading model from {self.model_path}")
                 self.model = YOLO(self.model_path)
+                self.class_names = self.model.names
             else:
-                # Use YOLOv8 model
-                logger.info("Loading YOLOv8 model")
-                # Will download the model if not found
-                self.model = YOLO("yolov8n.pt")
-
-                # TODO: load a model specifically trained on car damage dataset.
-                logger.warning("Using base YOLOv8 model. For production, use a model trained on car damage data.")
+                logger.error(f"Model not found at {self.model_path}")
+                raise FileNotFoundError(f"Model file not found: {self.model_path}")
 
             # Move model to appropriate device
             if self.device != "cpu":
@@ -236,11 +248,10 @@ class CarDamageDetector:
                     # Extract bounding box coordinates
                     bbox = boxes.xyxy[i].cpu().numpy().astype(int).tolist()
                     confidence = float(boxes.conf[i].cpu().numpy())
-                    # class_id = int(boxes.cls[i].cpu().numpy()) # Not used in simulation
+                    class_id = int(boxes.cls[i].cpu().numpy())
 
-                    # Map class ID to damage type (for demo, we'll simulate)
-                    # In a real trained model, class_id would map to actual damage types
-                    damage_type = self._simulate_damage_classification(bbox, img_array)
+                    # Map class ID to damage type
+                    damage_type = self.class_names.get(class_id, "unknown")
 
                     # Calculate damage area percentage
                     area_percentage = self._calculate_damage_area(bbox, original_shape)
@@ -271,7 +282,7 @@ class CarDamageDetector:
                 "total_estimated_cost": sum([d["estimated_cost"] for d in detections]),
                 "highest_severity": self._get_highest_severity(detections),
                 "processing_info": {
-                    "model_used": "YOLOv8",
+                    "model_used": "vineetsarpal/yolov11n-car-damage",
                     "device": self.device,
                     "confidence_threshold": self.confidence_threshold
                 }
@@ -282,34 +293,6 @@ class CarDamageDetector:
         except Exception as e:
             logger.error(f"Error during damage detection: {str(e)}")
             raise RuntimeError(f"Damage detection failed: {str(e)}")
-
-    def _simulate_damage_classification(self, bbox: List[int], image: np.ndarray) -> str:
-        """
-        Simulate damage type classification for demo purposes.
-        In production, this would be handled by the trained model.
-
-        Args:
-            bbox: Bounding box coordinates
-            image: Image array
-
-        Returns:
-            str: Simulated damage type
-        """
-        # Simple simulation based on bounding box characteristics
-        x1, y1, x2, y2 = bbox
-        width = x2 - x1
-        height = y2 - y1
-        aspect_ratio = width / height if height > 0 else 1
-
-        # Simulate different damage types based on shape characteristics
-        if aspect_ratio > 2.0:
-            return "scratch"
-        elif width * height < 5000:  # Small area
-            return "paint_damage"
-        elif aspect_ratio < 0.8:
-            return "dent"
-        else:
-            return "broken_part"
 
     def _describe_location(self, bbox: List[int], image_shape: Tuple[int, int]) -> str:
         """
