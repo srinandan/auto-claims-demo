@@ -20,8 +20,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -31,8 +31,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var AIServiceURL = path.Join(os.Getenv("AI_SERVICE_URL"), "process-claims")
-var FindShopsURL = path.Join(os.Getenv("AI_SERVICE_URL"), "find-repair-shops")
+var AIServiceURL string
+var FindShopsURL string
+
+func init() {
+	serviceURL := os.Getenv("AI_SERVICE_URL")
+	if serviceURL == "" {
+		serviceURL = "http://localhost:8000"
+	}
+
+	var err error
+	AIServiceURL, err = url.JoinPath(serviceURL, "process-claims")
+	if err != nil {
+		fmt.Printf("Error creating AIServiceURL: %v\n", err)
+		// Fallback to simple concatenation if JoinPath fails
+		AIServiceURL = fmt.Sprintf("%s/%s", strings.TrimRight(serviceURL, "/"), "process-claims")
+	}
+
+	FindShopsURL, err = url.JoinPath(serviceURL, "find-repair-shops")
+	if err != nil {
+		fmt.Printf("Error creating FindShopsURL: %v\n", err)
+		FindShopsURL = fmt.Sprintf("%s/%s", strings.TrimRight(serviceURL, "/"), "find-repair-shops")
+	}
+}
 
 // ListClaims returns all claims
 func ListClaims(c *gin.Context) {
@@ -198,7 +219,7 @@ func BookAppointment(c *gin.Context) {
 		return
 	}
 
-	resp, err := http.Post(BookAppointmentURL, "application/json", bytes.NewBuffer(jsonData))
+	resp, err := http.Post(os.Getenv("AI_SERVICE_URL")+"/book-appointment", "application/json", bytes.NewBuffer(jsonData))
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
 		return
