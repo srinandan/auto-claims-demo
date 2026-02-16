@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from google.adk.agents import LlmAgent, SequentialAgent
 from google.adk.runners import InMemoryRunner
 from google.genai.types import Content, Part
@@ -50,21 +53,16 @@ def generate_repair_cost(severity: str) -> dict:
 # --- Agents Definition ---
 MODEL_NAME = "gemini-2.5-flash"
 
-# Assessor Agent
-assessor_agent = LlmAgent(
-    name="AssessorAgent",
-    model=MODEL_NAME,
-    description="Assess damage severity based on findings.",
-    instruction="""
-    You are an expert insurance adjuster.
-    Analyze the provided list of vehicle damage findings.
-    Determine if the overall damage is 'Simple' or 'Complex'.
-    - Simple: Minor dents, scratches, single panel damage.
-    - Complex: Structural damage, multiple panels, broken glass, airbag deployment.
+ASSESSOR_AGENT_URL = os.getenv("ASSESSOR_AGENT_URL")
 
-    Output *only* the word 'Simple' or 'Complex'.
-    """,
-    output_key="severity"
+# Assessor Agent
+assessor_agent = RemoteA2aAgent(
+        name="assessor_agent_test",
+        description=(
+            "Assess damage severity based on findings."
+        ),
+        agent_card=f"{ASSESSOR_AGENT_URL}{AGENT_CARD_WELL_KNOWN_PATH}",
+        # a2a_client_factory=factory,
 )
 
 # Processor Agent
