@@ -91,7 +91,7 @@
     </div>
 
     <!-- New Claim Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
+    <div v-if="showModal" class="fixed inset-0 bg-gray-600/50 overflow-y-auto h-full w-full flex justify-center items-center z-50">
       <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-bold text-gray-800">File New Claim</h2>
