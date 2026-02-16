@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -30,8 +31,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const AIServiceURL = "http://localhost:8000/process-claims"
-const FindShopsURL = "http://localhost:8000/find-repair-shops"
+var AIServiceURL = path.Join(os.Getenv("AI_SERVICE_URL"), "process-claims")
+var FindShopsURL = path.Join(os.Getenv("AI_SERVICE_URL"), "find-repair-shops")
 
 // ListClaims returns all claims
 func ListClaims(c *gin.Context) {

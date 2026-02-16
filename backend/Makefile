@@ -4,6 +4,7 @@ REGION ?= us-central1
 BUCKET_NAME ?= $(shell echo ${PROJECT_ID}-auto-claims)
 SERVICE_ACCOUNT_EMAIL ?= $(shell echo "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com")
 _COMMIT_SHA ?= $(shell echo | find go.mod go.sum database models handlers main.go -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
+AI_SERVICE_URL ?= http://localhost:8000
 
 .PHONY: local-backend
 local-backend:
@@ -13,4 +14,5 @@ local-backend:
 	export GOOGLE_CLOUD_REGION=${REGION} ;\
 	export BUCKET_NAME=${BUCKET_NAME} ;\
 	export SERVICE_ACCOUNT_EMAIL=${SERVICE_ACCOUNT_EMAIL} ;\
+	export AI_SERVICE_URL=${AI_SERVICE_URL} ;\
 	go mod tidy && go run main.go
