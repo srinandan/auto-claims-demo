@@ -46,6 +46,14 @@ make local-frontend
 # Runs on http://localhost:5173
 ```
 
+## Contributing
+
+Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to this project.
+
+## Support
+
+This demo is *NOT* endorsed by Google or Google Cloud. The repo is intended for educational/hobbyists use only.
+
 ## License
 
-This project is licensed under the terms of the [Apache License 2.0](./LICENSE).
+This project is licensed under the terms of the [LICENSE.txt](./LICENSE.txt) file. The AI generated car damage pictures are licensed under the Creative Commons Attribution 4.0 International License. To view a copy of this license, visit <http://creativecommons.org/licenses/by/4.0/>
