@@ -240,13 +240,13 @@
             <h4 class="font-semibold text-sm mb-1">Detected Damage</h4>
             <div class="flex flex-wrap gap-2">
               <span
-                v-for="part in parseParts(selectedPhoto.analysis_result.parts_detected)"
+                v-for="part in detectedParts"
                 :key="part"
                 class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded capitalize"
               >
                 {{ part.replace('_', ' ') }}
               </span>
-              <span v-if="parseParts(selectedPhoto.analysis_result.parts_detected).length === 0" class="text-sm text-gray-500">None detected</span>
+              <span v-if="detectedParts.length === 0" class="text-sm text-gray-500">None detected</span>
             </div>
           </div>
         </div>
@@ -267,7 +267,7 @@
             </div>
              <!-- Simple Items List -->
              <div class="text-xs text-gray-600 space-y-1 mt-2">
-               <div v-for="(item, idx) in parseItems(claim.estimates[0].items)" :key="idx" class="flex justify-between">
+               <div v-for="(item, idx) in estimateItems" :key="idx" class="flex justify-between">
                  <span>{{ item.part }}</span>
                  <span>${{ item.cost }}</span>
                </div>
@@ -353,6 +353,16 @@ const detections = computed(() => {
   } catch (e) {
     return []
   }
+})
+
+const detectedParts = computed(() => {
+  if (!selectedPhoto.value || !selectedPhoto.value.analysis_result?.parts_detected) return []
+  return parseParts(selectedPhoto.value.analysis_result.parts_detected)
+})
+
+const estimateItems = computed(() => {
+  if (!claim.value.estimates || claim.value.estimates.length === 0) return []
+  return parseItems(claim.value.estimates[0].items)
 })
 
 const fetchClaim = async () => {
