@@ -40,7 +40,7 @@
     </div>
 
     <!-- Repair Shops Modal -->
-    <div v-if="showRepairShops" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div v-if="showRepairShops" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col h-[600px]">
 
         <!-- Header -->
