@@ -47,10 +47,10 @@ make install && make playground
 | `make playground`    | Launch local development environment                                                        |
 | `make lint`          | Run code quality checks                                                                     |
 | `make test`          | Run unit and integration tests                                                              |
-| `make deploy`        | Deploy agent to Cloud Run                                                                   |
-| `make local-backend` | Launch local development server with hot-reload                                             |
-| `make inspector`     | Launch A2A Protocol Inspector                                                               |
-| `make setup-dev-env` | Set up development environment resources using Terraform                                   |
+| `make deploy`              | Deploy agent to Cloud Run                                                                   |
+| `make local-processor-agent` | Launch local development server on port 8082                                             |
+| `make inspector`           | Launch A2A Protocol Inspector                                                               |
+| `make setup-dev-env`       | Set up development environment resources using Terraform                                   |
 
 For full command options and usage, refer to the [Makefile](Makefile).
 

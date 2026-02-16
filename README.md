@@ -4,13 +4,13 @@
 
 This project is an **Auto Claims Processing Application** that streamlines the claims process by allowing users to submit claims and automatically analyzing vehicle images for damage using an AI service.
 
-## Architecture Overview
+The system consists of several microservices:
 
-The system consists of three main microservices:
-
-1.  **[Frontend](./frontend/README.md)**: A responsive web interface built with **Vue 3**, **Vite**, and **Tailwind CSS v4** for users to submit claims and view results.
-2.  **[Backend](./backend/README.md)**: A robust REST API built with **Go (Gin)** and **SQLite** that manages claim data, policies, and orchestration.
-3.  **[AI Service](./ai-service/README.md)**: A specialized service built with **Python (FastAPI)** that leverages **Google Cloud Vertex AI / Gemini** (or a mock implementation) to detect vehicle damage from images.
+1.  **[Frontend](./frontend/README.md)**: A responsive web interface built with **Vue 3**, **Vite**, and **Tailwind CSS v4**.
+2.  **[Backend](./backend/README.md)**: A robust REST API built with **Go (Gin)** and **SQLite**.
+3.  **[AI Service](./ai-service/README.md)**: A specialized service built with **Python (FastAPI)** that orchestrates the claims processing flow using remote agents.
+4.  **[Assessor Agent](./assessor-agent/README.md)**: A remote A2A agent that assesses damage severity.
+5.  **[Processor Agent](./processor-agent/README.md)**: A remote A2A agent that generates repair estimates and final decisions.
 
 ## Prerequisites
 
@@ -25,11 +25,19 @@ Ensure you have the following installed:
 
 Detailed instructions for each service are available in their respective directories, but here is a quick summary to get everything running locally.
 
-### 1. Start the Backend
+### 1. Start the Agents
+
+In separate terminals:
 ```bash
-cd backend
-make local-backend
-# Runs on http://localhost:8080
+# Terminal 1: Assessor Agent
+cd assessor-agent
+make local-assessor-agent
+# Runs on http://localhost:8081
+
+# Terminal 2: Processor Agent
+cd processor-agent
+make local-processor-agent
+# Runs on http://localhost:8082
 ```
 
 ### 2. Start the AI Service
@@ -39,7 +47,14 @@ make local-ai-service
 # Runs on http://localhost:8000
 ```
 
-### 3. Start the Frontend
+### 3. Start the Backend
+```bash
+cd backend
+make local-backend
+# Runs on http://localhost:8080
+```
+
+### 4. Start the Frontend
 ```bash
 cd frontend
 make local-frontend
