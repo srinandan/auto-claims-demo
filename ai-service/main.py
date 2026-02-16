@@ -29,8 +29,11 @@ from repair_shop_agent import run_repair_shop_agent
 from appointment_agent import run_appointment_agent
 from car_damage_detector import CarDamageDetector
 from fastapi.concurrency import run_in_threadpool
+from telemetry import setup_telemetry
 
 import google.auth
+
+setup_telemetry()
 
 app = FastAPI()
 
