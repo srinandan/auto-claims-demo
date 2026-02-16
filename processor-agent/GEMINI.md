@@ -1657,10 +1657,10 @@ curl -X POST http://localhost:8000/invoke -H "Content-Type: application/json" \
 ```bash
 # Pub/Sub push subscription
 gcloud pubsub subscriptions create my-sub --topic=my-topic \
-    --push-endpoint=https://assessor-agent.run.app/invoke
+    --push-endpoint=https://processor-agent.run.app/invoke
 # Eventarc trigger
 gcloud eventarc triggers create my-trigger \
-    --destination-run-service=assessor-agent \
+    --destination-run-service=processor-agent \
     --destination-run-path=/invoke \
     --event-filters="type=google.cloud.storage.object.v1.finalized"
 ```

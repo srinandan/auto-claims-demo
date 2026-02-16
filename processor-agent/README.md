@@ -1,4 +1,4 @@
-# assessor-agent
+# processor-agent
 
 ReAct agent with A2A protocol [experimental]
 Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.36.0`
@@ -6,7 +6,7 @@ Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.c
 ## Project Structure
 
 ```
-assessor-agent/
+processor-agent/
 ├── app/         # Core agent code
 │   ├── agent.py               # Main agent logic
 │   ├── fast_api_app.py        # FastAPI Backend server
