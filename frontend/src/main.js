@@ -18,5 +18,8 @@ import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
 import router from './router'
+import { initTelemetry } from './telemetry'
+
+initTelemetry()
 
 createApp(App).use(router).mount('#app')

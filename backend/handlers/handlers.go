@@ -29,10 +29,12 @@ import (
 	"example.com/claims-app/models"
 	"example.com/claims-app/pkg/gcs"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 var AIServiceURL string
 var FindShopsURL string
+var httpClient *http.Client
 
 func init() {
 	serviceURL := os.Getenv("AI_SERVICE_URL")
@@ -52,6 +54,12 @@ func init() {
 	if err != nil {
 		fmt.Printf("Error creating FindShopsURL: %v\n", err)
 		FindShopsURL = fmt.Sprintf("%s/%s", strings.TrimRight(serviceURL, "/"), "find-repair-shops")
+	}
+
+	// Initialize instrumented HTTP client
+	httpClient = &http.Client{
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+		Timeout:   120 * time.Second, // 2 minute timeout for AI operations
 	}
 }
 
@@ -153,7 +161,14 @@ func FindRepairShops(c *gin.Context) {
 		return
 	}
 
-	resp, err := http.Post(FindShopsURL, "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", FindShopsURL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request: " + err.Error()})
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
 		return
@@ -219,7 +234,14 @@ func BookAppointment(c *gin.Context) {
 		return
 	}
 
-	resp, err := http.Post(os.Getenv("AI_SERVICE_URL")+"/book-appointment", "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", os.Getenv("AI_SERVICE_URL")+"/book-appointment", bytes.NewBuffer(jsonData))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request: " + err.Error()})
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
 		return
@@ -440,15 +462,15 @@ func AnalyzeClaim(c *gin.Context) {
 	}
 
 	// Call AI Service
-	req, err := http.NewRequest("POST", AIServiceURL, bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", AIServiceURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request: " + err.Error()})
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	// Use instrumented client
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
 		return
