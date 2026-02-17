@@ -5,14 +5,14 @@ _COMMIT_SHA ?= $(shell echo | find app pyproject.toml uv.lock -type f -print0 | 
 OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 PORT ?= 8081
 
-.PHONY: backend local-assessor-agent
+.PHONY: assessor-agent local-assessor-agent
 
-backend:
+assessor-agent:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${REGION} ;\
 	export PROJECT_ID=${PROJECT_ID} ;\
 	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
-	gcloud builds submit --config=deployment/cd/dev-cloudrun.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
+	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
 
 local-assessor-agent:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\

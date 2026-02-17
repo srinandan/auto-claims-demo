@@ -33,6 +33,8 @@ from telemetry import setup_telemetry
 
 import google.auth
 
+PORT = int(os.environ.get("PORT", "8000"))
+
 setup_telemetry()
 
 app = FastAPI()
@@ -341,4 +343,4 @@ async def real_analysis(content, photo_id):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=PORT)

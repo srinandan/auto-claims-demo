@@ -12,15 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.11-slim
+FROM python:3.12-slim-bookworm
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN pip install --no-cache-dir uv==0.8.13
+# Install system dependencies required by OpenCV and Ultralytics
+RUN apt-get update && apt-get install -y \
+    libgl1 \
+    libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
 
-COPY ./pyproject.toml ./README.md ./uv.lock* ./
+COPY pyproject.toml uv.lock ./
 
-COPY ./app ./app
+COPY *.py ./
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN uv sync --frozen
 
@@ -31,11 +43,11 @@ ARG AGENT_VERSION=0.0.0
 ENV AGENT_VERSION=${AGENT_VERSION}
 
 ENV PORT=8080
-ENV OTEL_SERVICE_NAME=auto-claims-assessor-agent
+ENV OTEL_SERVICE_NAME=auto-claims-ai-service
 ENV ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS=false
 ENV OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
 ENV OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT
 
 EXPOSE 8080
 
-CMD ["uv", "run", "uvicorn", "app.fast_api_app:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "main.py"]
