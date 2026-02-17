@@ -17,7 +17,16 @@
 const express = require('express');
 const path = require('path');
 const rateLimit = require('express-rate-limit');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
+
+const apiServiceUrl = process.env.API_SERVICE_URL || 'http://localhost:8080';
+
+// Proxy API requests to backend
+app.use('/api', createProxyMiddleware({
+    target: apiServiceUrl,
+    changeOrigin: true,
+}));
 
 const splatLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes

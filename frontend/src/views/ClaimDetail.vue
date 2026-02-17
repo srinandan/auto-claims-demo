@@ -321,7 +321,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
-import axios from 'axios'
+import api from '../api'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -367,7 +367,7 @@ const estimateItems = computed(() => {
 
 const fetchClaim = async () => {
   try {
-    const response = await axios.get(`/api/claims/${route.params.id}`)
+    const response = await api.get(`/api/claims/${route.params.id}`)
     claim.value = response.data
     // Select first photo by default if none selected
     if (!selectedPhoto.value && claim.value.photos && claim.value.photos.length > 0) {
@@ -387,7 +387,7 @@ const fetchClaim = async () => {
 const analyzeClaim = async () => {
   analyzing.value = true
   try {
-    const response = await axios.post(`/api/claims/${route.params.id}/analyze`)
+    const response = await api.post(`/api/claims/${route.params.id}/analyze`)
     claim.value = response.data
     // Update selected photo with new data
     if (selectedPhoto.value) {
@@ -410,7 +410,7 @@ const findRepairShops = async () => {
   isChatOpen.value = false
 
   try {
-    const response = await axios.post(`/api/claims/${route.params.id}/repair-shops`)
+    const response = await api.post(`/api/claims/${route.params.id}/repair-shops`)
     if (response.data && response.data.shops) {
       repairShops.value = response.data.shops
     }
@@ -447,7 +447,7 @@ const startBooking = async () => {
     // Initial Trigger
     chatLoading.value = true
     try {
-        const response = await axios.post(`/api/claims/${route.params.id}/book-appointment`, {
+        const response = await api.post(`/api/claims/${route.params.id}/book-appointment`, {
             session_id: sessionId.value,
             message: "Hello, I'd like to book an appointment.",
             shop_name: selectedShop.value.name,
@@ -483,7 +483,7 @@ const sendMessage = async () => {
     scrollToBottom()
 
     try {
-         const response = await axios.post(`/api/claims/${route.params.id}/book-appointment`, {
+         const response = await api.post(`/api/claims/${route.params.id}/book-appointment`, {
             session_id: sessionId.value,
             message: text,
             shop_name: selectedShop.value.name
@@ -510,7 +510,7 @@ const scrollToBottom = () => {
 const updateStatus = async (status) => {
   updating.value = true
   try {
-    const response = await axios.put(`/api/claims/${route.params.id}`, { status })
+    const response = await api.put(`/api/claims/${route.params.id}`, { status })
     claim.value.status = response.data.status
   } catch (error) {
     console.error('Error updating claim:', error)

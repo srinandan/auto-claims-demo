@@ -75,7 +75,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import api from '../api'
 
 const router = useRouter()
 const policyNumber = ref('')
@@ -89,7 +89,7 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    const response = await axios.get(`/api/policies/${policyNumber.value}`)
+    const response = await api.get(`/api/policies/${policyNumber.value}`)
     // Store user session
     localStorage.setItem('user', JSON.stringify(response.data))
     router.push('/dashboard')

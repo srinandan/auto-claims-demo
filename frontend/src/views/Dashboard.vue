@@ -280,7 +280,7 @@
 
 <script setup>
 import { ref, onMounted, reactive } from 'vue'
-import axios from 'axios'
+import api from '../api'
 
 const claims = ref([])
 const loading = ref(true)
@@ -305,7 +305,7 @@ const fetchClaims = async () => {
   if (!user.value) return
 
   try {
-    const response = await axios.get('/api/claims', {
+    const response = await api.get('/api/claims', {
       params: {
         policy_number: user.value.policy_number
       }
@@ -370,7 +370,7 @@ const submitClaim = async () => {
   }
 
   try {
-    await axios.post('/api/claims', formData, {
+    await api.post('/api/claims', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
