@@ -40,7 +40,7 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "auto-claims-frontend"
+      - "${_CONTAINER_NAME}"
       - "--project"
       - "${PROJECT_ID}"
       - "--region"
@@ -58,7 +58,7 @@ steps:
       - "--service-account"
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars"
-      - 'VITE_API_BASE_URL="https://autoclaims.endpoints.${PROJECT_ID}.cloud.goog,OTEL_SERVICE_NAME=auto-claims-frontend'
+      - 'VITE_API_BASE_URL="https://autoclaims.endpoints.${PROJECT_ID}.cloud.goog'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances"
@@ -76,7 +76,6 @@ substitutions:
   _REGION: ${_REGION}
   _ARTIFACT_REGISTRY_REPO_NAME: auto-claims
   _CONTAINER_NAME: auto-claims-frontend
-  _CLOUD_RUN_APP_SA_EMAIL: "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
   _COMMIT_SHA: ${_COMMIT_SHA}
 
 images:
