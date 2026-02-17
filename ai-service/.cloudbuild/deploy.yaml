@@ -86,6 +86,8 @@ steps:
       - "300"
       - "--cpu-boost"
       - "--session-affinity"
+      - "--set-secrets"
+      - 'HF_TOKEN=hf-token:latest'        
       - "--ingress"
       - "internal-and-cloud-load-balancing"
       - "--labels=appid=auto-claims"
