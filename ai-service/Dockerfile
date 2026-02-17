@@ -19,21 +19,20 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
 
-COPY pyproject.toml uv.lock ./
-
-COPY *.py ./
-
 ENV UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy
 
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# Install dependencies first (Cached layer)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project
 
+# Copy source code and install project (Fast layer)
+COPY *.py README.md ./
 RUN uv sync --frozen
 
 ARG COMMIT_SHA=""
