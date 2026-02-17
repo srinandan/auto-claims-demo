@@ -29,6 +29,8 @@ This command will:
 2.  Start the development server (`npm run dev`).
 3.  The app will be available at `http://localhost:5173` (or another port if 5173 is busy).
 
+**Note on Proxy**: The Vite server is configured to proxy API requests starting with `/api` to the backend service running at `http://localhost:8080`. Ensure the backend is running for full functionality.
+
 ### Build for Production
 
 ```bash

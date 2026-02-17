@@ -8,9 +8,9 @@ The system consists of several microservices:
 
 1.  **[Frontend](./frontend/README.md)**: A responsive web interface built with **Vue 3**, **Vite**, and **Tailwind CSS v4**.
 2.  **[Backend](./backend/README.md)**: A robust REST API built with **Go (Gin)** and **SQLite**.
-3.  **[AI Service](./ai-service/README.md)**: A specialized service built with **Python (FastAPI)** that orchestrates the claims processing flow using remote agents.
-4.  **[Assessor Agent](./assessor-agent/README.md)**: A remote A2A agent that assesses damage severity.
-5.  **[Processor Agent](./processor-agent/README.md)**: A remote A2A agent that generates repair estimates and final decisions.
+3.  **[AI Service](./ai-service/README.md)**: A specialized service built with **Python (FastAPI)** that uses **Vertex AI** and **YOLOv11** to analyze images and orchestrate the claims process.
+4.  **[Assessor Agent](./assessor-agent/README.md)**: A remote A2A agent that assesses damage severity based on AI analysis.
+5.  **[Processor Agent](./processor-agent/README.md)**: A remote A2A agent that generates repair estimates and makes final claim decisions.
 
 ## Prerequisites
 

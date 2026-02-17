@@ -1,7 +1,17 @@
-# assessor-agent
+# Assessor Agent
 
-ReAct agent with A2A protocol [experimental]
-Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.36.0`
+ReAct agent with A2A protocol [experimental].
+Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.36.0`.
+
+## Service Description
+
+The **Assessor Agent** is a specialized AI agent responsible for evaluating the severity of vehicle damage based on visual analysis and claim details. It interacts with the main AI Service to:
+
+*   Analyze damage reports.
+*   Determine the severity level (e.g., Low, Medium, High).
+*   Provide initial assessment data to be used by the Processor Agent.
+
+It implements the [A2A (Agent-to-Agent) Protocol](https://a2a-protocol.org/) for standardized communication.
 
 ## Project Structure
 

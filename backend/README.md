@@ -20,11 +20,12 @@ This is the backend service for the Auto Claims Demo, built with **Go** and **Gi
 
 The application expects the following environment variables (handled by `Makefile` for local dev):
 
--   `PROJECT_ID`: Google Cloud Project ID
--   `PROJECT_NUMBER`: Google Cloud Project Number
--   `REGION`: Google Cloud Region (e.g., `us-central1`)
+-   `GOOGLE_CLOUD_PROJECT` (or `PROJECT_ID` in Makefile): Google Cloud Project ID
+-   `PORT`: Port to run the server on (default: `8080`)
 -   `BUCKET_NAME`: GCS Bucket for storing images
--   `SERVICE_ACCOUNT_EMAIL`: Service Account Email
+-   `AI_SERVICE_URL`: URL of the AI Service (default: `http://localhost:8000`)
+-   `SERVICE_ACCOUNT_EMAIL`: Service Account Email (for signing URLs)
+-   `REGION`: Google Cloud Region (e.g., `us-central1`)
 
 ### Run Locally
 
@@ -44,8 +45,9 @@ This command will:
 -   `GET /api/claims/:id`: Get specific claim details
 -   `POST /api/claims`: Create a new claim
 -   `PUT /api/claims/:id`: Update a claim
-- `POST /api/claims/:id/analyze`: Trigger AI analysis and sequential agentic flow for a claim
+-   `POST /api/claims/:id/analyze`: Trigger AI analysis and sequential agentic flow for a claim
 -   `POST /api/claims/:id/repair-shops`: Find repair shops for a claim
+-   `POST /api/claims/:id/book-appointment`: Book an appointment with a repair shop
 
 ### Policies
 -   `GET /api/policies/:number`: Get a policy by its number
