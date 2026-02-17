@@ -1,7 +1,17 @@
-# processor-agent
+# Processor Agent
 
-ReAct agent with A2A protocol [experimental]
-Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.36.0`
+ReAct agent with A2A protocol [experimental].
+Agent generated with [`googleCloudPlatform/agent-starter-pack`](https://github.com/GoogleCloudPlatform/agent-starter-pack) version `0.36.0`.
+
+## Service Description
+
+The **Processor Agent** is a specialized AI agent responsible for generating repair estimates and making final claim decisions. It interacts with the main AI Service and receives input from the Assessor Agent to:
+
+*   Calculate repair costs based on damage severity and parts.
+*   Generate itemized estimates.
+*   Make a final decision (e.g., Approve, Review Required) on the claim.
+
+It implements the [A2A (Agent-to-Agent) Protocol](https://a2a-protocol.org/) for standardized communication.
 
 ## Project Structure
 

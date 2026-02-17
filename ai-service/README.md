@@ -1,12 +1,15 @@
 # Auto Claims AI Service
 
-This service handles image analysis for detecting vehicle damage using **Google Cloud Vertex AI / Gemini**.
+This service handles image analysis for detecting vehicle damage using **Google Cloud Vertex AI / Gemini** and **YOLOv11**. It orchestrates the claims process by coordinating with specialized agents.
 
 ## Tech Stack
 
 -   **Language**: [Python](https://www.python.org/) (v3.10+)
 -   **Framework**: [FastAPI](https://fastapi.tiangolo.com/)
--   **AI/ML**: [Google Cloud Vertex AI](https://cloud.google.com/vertex-ai) / Gemini Pro Vision
+-   **AI/ML**:
+    -   **Google Cloud Vertex AI** (Gemini Pro Vision) for generative analysis.
+    -   **YOLOv11** for object detection (specific damage types).
+    -   **Agents**: `claims_agent`, `repair_shop_agent`, `appointment_agent`.
 -   **Package Manager**: [uv](https://docs.astral.sh/uv/)
 
 ## Prerequisites
@@ -20,13 +23,21 @@ This service handles image analysis for detecting vehicle damage using **Google 
 ### Environment Variables
 The service uses the following environment variables (handled by `Makefile` for local dev):
 
-- `ASSESSOR_AGENT_URL`: URL of the Assessor Agent (default: `http://localhost:8081`).
-- `PROCESSOR_AGENT_URL`: URL of the Processor Agent (default: `http://localhost:8082`).
-- `GOOGLE_CLOUD_PROJECT`: Project ID for BigQuery analytics and Vertex AI.
+-   `ASSESSOR_AGENT_URL`: URL of the Assessor Agent (default: `http://localhost:8081`).
+-   `PROCESSOR_AGENT_URL`: URL of the Processor Agent (default: `http://localhost:8082`).
+-   `GOOGLE_CLOUD_PROJECT`: Project ID for BigQuery analytics and Vertex AI.
+-   `GOOGLE_CLOUD_LOCATION`: Google Cloud Region (default: `us-central1`).
+-   `GOOGLE_GENAI_USE_VERTEXAI`: Set to `True` to use Vertex AI.
+-   `GOOGLE_CLOUD_QUOTA_PROJECT`: Project ID for quota purposes.
 
 ### Mock Mode
 You can run the service in **Mock Mode** to avoid calling actual Google Cloud APIs.
 Set `MOCK_MODE=true` in your environment or `Makefile`.
+
+In Mock Mode:
+-   **No GCP calls**: The service will not attempt to contact Vertex AI, Gemini, or GCS.
+-   **Hardcoded Responses**: Endpoints will return pre-defined, successful responses (e.g., a "Good" quality score, a specific repair estimate, a list of sample repair shops).
+-   **Faster Development**: Useful for frontend/backend development when you don't need real AI inference.
 
 ## Setup & Run
 
@@ -53,3 +64,5 @@ MOCK_MODE=true make local-ai-service
     -   Inputs: `file_uris` (List[str])
 -   `POST /find-repair-shops`: Finds repair shops based on location and damage.
     -   Inputs: `zip_code`, `state`, `make`, `model`, `damage_type`
+-   `POST /book-appointment`: Books an appointment with a repair shop via an agent.
+    -   Inputs: `session_id`, `message`, `context` (optional)
