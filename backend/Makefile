@@ -16,3 +16,10 @@ local-backend:
 	export SERVICE_ACCOUNT_EMAIL=${SERVICE_ACCOUNT_EMAIL} ;\
 	export AI_SERVICE_URL=${AI_SERVICE_URL} ;\
 	go mod tidy && go run main.go
+
+backend:
+	export _COMMIT_SHA=${_COMMIT_SHA} ;\
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
+	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}

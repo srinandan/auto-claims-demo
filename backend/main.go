@@ -40,6 +40,11 @@ func main() {
 		fmt.Println("Warning: GOOGLE_CLOUD_PROJECT not set. Telemetry might fail or use default.")
 	}
 
+	PORT := os.Getenv("PORT")
+	if PORT == "" {
+		PORT = "8080"
+	}
+
 	shutdown, err := telemetry.InitTelemetry(context.Background(), projectID, "claims-backend")
 	if err != nil {
 		log.Printf("Failed to initialize telemetry: %v", err)
@@ -65,8 +70,8 @@ func main() {
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "traceparent", "tracestate"}
 	r.Use(cors.New(config))
 
-    // Serve uploaded files
-    r.Static("/uploads", "./uploads")
+	// Serve uploaded files
+	r.Static("/uploads", "./uploads")
 
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -86,5 +91,5 @@ func main() {
 		api.GET("/policies/:number", handlers.GetPolicy)
 	}
 
-	r.Run(":8080")
+	r.Run(fmt.Sprintf(":%s", PORT))
 }

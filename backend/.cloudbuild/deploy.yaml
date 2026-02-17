@@ -14,6 +14,9 @@
 
 steps:
   # Build and Push
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args: ['-c', 'docker pull ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest || exit 0']
   - name: "gcr.io/cloud-builders/docker"
     env:
       - 'DOCKER_BUILDKIT=1'
@@ -24,6 +27,10 @@ steps:
         "PROJECT_ID=${PROJECT_ID}",
         "-t",
         "${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}",
+        "-t",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest",
+        "--cache-from",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest",
         ".",
       ]
   - name: "gcr.io/cloud-builders/docker"
@@ -31,6 +38,12 @@ steps:
       [
         "push",
         "${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}",
+      ]
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest",
       ]
 
   # Deploy to Staging
@@ -40,7 +53,7 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "auto-claims-backend"
+      - "${_CONTAINER_NAME}"
       - "--project"
       - "${PROJECT_ID}"
       - "--region"
@@ -58,7 +71,7 @@ steps:
       - "--service-account"
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars"
-      - 'VITE_API_BASE_URL="https://autoclaims.endpoints.${PROJECT_ID}.cloud.goog,OTEL_SERVICE_NAME=auto-claims-frontend'
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,BUCKET_NAME=${PROJECT_ID}-auto-claims,AI_SERVICE=https://auto-claims-ai-service-${PROJECT_NUMBER}.${_REGION}.run.app'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances"
@@ -70,17 +83,17 @@ steps:
       - "--session-affinity"
       - "--ingress"
       - "internal-and-cloud-load-balancing"
+      - "--labels=appid=auto-claims"
 
 substitutions:
-  _STAGING_PROJECT_ID: ${PROJECT_ID}
   _REGION: ${_REGION}
   _ARTIFACT_REGISTRY_REPO_NAME: auto-claims
   _CONTAINER_NAME: auto-claims-backend
-  _CLOUD_RUN_APP_SA_EMAIL: "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
   _COMMIT_SHA: ${_COMMIT_SHA}
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}
+  - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest
 
 options:
   logging: CLOUD_LOGGING_ONLY

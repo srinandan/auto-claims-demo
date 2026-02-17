@@ -27,7 +27,7 @@ COPY . .
 ENV GO111MODULE=on
 RUN go mod tidy
 RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=true -a -gcflags='all="-l"' -ldflags='-s -w -extldflags "-static"'  -o /app/bin/backend main.go
+RUN GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=true -a -gcflags='all="-l"' -ldflags='-s -w -extldflags "-static"'  -o /app/bin/backend main.go
 
 # use debug because it includes busybox
 FROM gcr.io/distroless/static-debian11:debug-nonroot@sha256:55716e80a7d4320ce9bc2dc8636fc193b418638041b817cf3306696bd0f975d1
@@ -37,5 +37,10 @@ LABEL org.opencontainers.image.url='https://github.com/srinandan/auto-claims-dem
     org.opencontainers.image.vendor='Google LLC' \
     org.opencontainers.image.licenses='Apache-2.0'
 COPY --from=builder /app/bin/backend /usr/local/bin/backend
+
+ENV OTEL_SERVICE_NAME=auto-claims-backend
+ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
+ENV PORT=8080
 
 ENTRYPOINT [ "backend" ]
