@@ -21,6 +21,9 @@ WORKDIR /app
 ARG PROJECT_ID
 ENV VITE_PROJECT_ID=$PROJECT_ID
 
+ARG API_KEY
+ENV VITE_OTLP_API_KEY=$API_KEY
+
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json index.html *.js ./
 

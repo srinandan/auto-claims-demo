@@ -10,9 +10,19 @@ import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 
 export function initTelemetry() {
+  let url = import.meta.env.VITE_OTLP_EXPORTER_URL;
+  if (url && !url.endsWith('/v1/traces')) {
+    url += '/v1/traces';
+  }
+
+  const headers = {};
+  if (import.meta.env.VITE_OTLP_API_KEY) {
+    headers['x-goog-api-key'] = import.meta.env.VITE_OTLP_API_KEY;
+  }
+
   const exporter = new OTLPTraceExporter({
-    url: import.meta.env.VITE_OTLP_EXPORTER_URL,
-    headers: {},
+    url: url,
+    headers: headers,
   });
 
   const resource = resourceFromAttributes({

@@ -32,5 +32,6 @@ export default defineConfig({
   },
   define: {
     'import.meta.env.VITE_OTLP_EXPORTER_URL': JSON.stringify(process.env.VITE_OTLP_EXPORTER_URL),
+    'import.meta.env.VITE_OTLP_API_KEY': JSON.stringify(process.env.VITE_OTLP_API_KEY),
   },
 })
