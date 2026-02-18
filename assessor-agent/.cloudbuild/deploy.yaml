@@ -69,7 +69,7 @@ steps:
       - "--service-account" 
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars" 
-      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,BQ_ANALYTICS_GCS_BUCKET=${PROJECT_ID},BQ_ANALYTICS_CONNECTION_ID=${PROJECT_ID},LOGS_BUCKET_NAME=${PROJECT_ID}'
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,BQ_ANALYTICS_GCS_BUCKET=${PROJECT_ID},BQ_ANALYTICS_CONNECTION_ID=${PROJECT_ID},LOGS_BUCKET_NAME=${PROJECT_ID},APP_URL=https://${_CONTAINER_NAME}-${PROJECT_NUMBER}.${_REGION}.run.app'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances" 

@@ -27,13 +27,7 @@ const apiBackendUrl = process.env.API_BACKEND_SERVICE_URL || 'http://localhost:8
 app.use(createProxyMiddleware('/api', {
     target: apiBackendUrl,
     changeOrigin: true,
-    onProxyReq: (proxyReq, req, res) => {
-        // Add header to identify the frontend
-        proxyReq.setHeader('X-Frontend-Service', 'auto-claims-frontend');
-    },
 }));
-
-app.set('trust proxy', 1);
 
 const splatLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes

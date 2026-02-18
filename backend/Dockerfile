@@ -43,6 +43,5 @@ ENV OTEL_SERVICE_NAME=auto-claims-backend
 ENV OTEL_TRACES_EXPORTER=otlp
 ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 ENV PORT=8080
-ENV DATABASE_PATH=claims.db
 
 ENTRYPOINT [ "backend" ]
