@@ -5,22 +5,24 @@ import { registerInstrumentations } from '@opentelemetry/instrumentation';
 import { DocumentLoadInstrumentation } from '@opentelemetry/instrumentation-document-load';
 import { XMLHttpRequestInstrumentation } from '@opentelemetry/instrumentation-xml-http-request';
 import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch';
-import { resourceFromAttributes } from '@opentelemetry/resources';
-import { SemanticResourceAttributes } from '@opentelemetry/semantic-conventions';
 import { ZoneContextManager } from '@opentelemetry/context-zone';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 
 export function initTelemetry() {
   const exporter = new OTLPTraceExporter({
-    url: import.meta.env.VITE_OTEL_EXPORTER_OTLP_ENDPOINT || 'https://telemetry.googleapis.com/v1/traces',
+    url: import.meta.env.VITE_OTLP_EXPORTER_URL,
+    headers: {},
+  });
+
+  const resource = resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: 'auto-claims-frontend',
   });
 
   const provider = new WebTracerProvider({
-    resource: resourceFromAttributes({
-      [SemanticResourceAttributes.SERVICE_NAME]: 'claims-frontend',
-    }),
+    resource: resource,
+    spanProcessors: [new BatchSpanProcessor(exporter)],
   });
-
-  provider.addSpanProcessor(new BatchSpanProcessor(exporter));
 
   provider.register({
     contextManager: new ZoneContextManager(),

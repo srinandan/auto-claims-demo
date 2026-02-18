@@ -39,7 +39,7 @@ EXPOSE 8080
 ENV OTEL_SERVICE_NAME=auto-claims-frontend
 ENV OTEL_TRACES_EXPORTER=otlp
 ENV OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
-ENV VITE_OTLP_EXPORTER_URL=https://telemetry.googleapis.com
+ENV VITE_OTLP_EXPORTER_URL=https://telemetry.googleapis.com/v1/traces
 
 # Run the app when the container launches
 CMD ["npm", "start"]
