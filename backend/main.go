@@ -16,6 +16,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -30,6 +31,10 @@ import (
 )
 
 func main() {
+	// Parse flags
+	migrateOnly := flag.Bool("migrate", false, "Run database migrations and exit")
+	flag.Parse()
+
 	// Initialize Telemetry
 	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
 	if projectID == "" {
@@ -57,7 +62,26 @@ func main() {
 	}
 
 	database.Connect()
-	seeder.SeedPolicyHolders(database.DB)
+
+	// Determine if we should migrate
+	dbType := os.Getenv("DB_TYPE")
+	shouldMigrate := *migrateOnly
+
+	// If in SQLite mode (dev), auto-migrate unless explicitly disabled
+	if dbType == "" || dbType == "sqlite" {
+		shouldMigrate = true
+	}
+
+	if shouldMigrate {
+		database.Migrate(database.DB)
+		seeder.SeedPolicyHolders(database.DB)
+		if *migrateOnly {
+			log.Println("Migration complete. Exiting.")
+			return
+		}
+	} else {
+		log.Println("Skipping migration (DB_TYPE=postgres and -migrate flag not set).")
+	}
 
 	r := gin.Default()
 
