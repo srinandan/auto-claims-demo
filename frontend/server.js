@@ -20,6 +20,8 @@ const rateLimit = require('express-rate-limit');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
 
+app.set('trust proxy', 1);
+
 const apiBackendUrl = process.env.API_BACKEND_SERVICE_URL || 'http://localhost:8080';
 
 app.use(createProxyMiddleware('/api', {

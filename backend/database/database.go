@@ -15,6 +15,7 @@
 package database
 
 import (
+	"os"
 	"log"
 	"example.com/claims-app/models"
 	"gorm.io/driver/sqlite"
@@ -25,7 +26,11 @@ var DB *gorm.DB
 
 func Connect() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("claims.db"), &gorm.Config{})
+	databasePath := os.Getenv("DATABASE_PATH")
+	if databasePath == "" {
+		databasePath = "claims.db"
+	}
+	DB, err = gorm.Open(sqlite.Open(databasePath), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}

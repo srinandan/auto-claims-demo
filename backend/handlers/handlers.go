@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -32,28 +33,32 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+var BaseAIServiceURL string
 var AIServiceURL string
 var FindShopsURL string
 var httpClient *http.Client
 
 func init() {
-	serviceURL := os.Getenv("AI_SERVICE_URL")
-	if serviceURL == "" {
-		serviceURL = "http://localhost:8000"
+	BaseAIServiceURL = strings.TrimSpace(os.Getenv("AI_SERVICE_URL"))
+	if BaseAIServiceURL == "" {
+		log.Println("Warning: AI_SERVICE_URL environment variable is not set. AI features will be disabled or fail.")
+	} else {
+		log.Printf("Configured AI Service URL: %s", BaseAIServiceURL)
 	}
 
 	var err error
-	AIServiceURL, err = url.JoinPath(serviceURL, "process-claims")
+	// Construct service URLs from base
+	AIServiceURL, err = url.JoinPath(BaseAIServiceURL, "process-claims")
 	if err != nil {
-		fmt.Printf("Error creating AIServiceURL: %v\n", err)
+		log.Printf("Error creating AIServiceURL: %v\n", err)
 		// Fallback to simple concatenation if JoinPath fails
-		AIServiceURL = fmt.Sprintf("%s/%s", strings.TrimRight(serviceURL, "/"), "process-claims")
+		AIServiceURL = fmt.Sprintf("%s/%s", strings.TrimRight(BaseAIServiceURL, "/"), "process-claims")
 	}
 
-	FindShopsURL, err = url.JoinPath(serviceURL, "find-repair-shops")
+	FindShopsURL, err = url.JoinPath(BaseAIServiceURL, "find-repair-shops")
 	if err != nil {
-		fmt.Printf("Error creating FindShopsURL: %v\n", err)
-		FindShopsURL = fmt.Sprintf("%s/%s", strings.TrimRight(serviceURL, "/"), "find-repair-shops")
+		log.Printf("Error creating FindShopsURL: %v\n", err)
+		FindShopsURL = fmt.Sprintf("%s/%s", strings.TrimRight(BaseAIServiceURL, "/"), "find-repair-shops")
 	}
 
 	// Initialize instrumented HTTP client
@@ -234,7 +239,8 @@ func BookAppointment(c *gin.Context) {
 		return
 	}
 
-	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", os.Getenv("AI_SERVICE_URL")+"/book-appointment", bytes.NewBuffer(jsonData))
+	u, _ := url.JoinPath(BaseAIServiceURL, "book-appointment")
+	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", u, bytes.NewBuffer(jsonData))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request: " + err.Error()})
 		return
@@ -461,6 +467,12 @@ func AnalyzeClaim(c *gin.Context) {
 		return
 	}
 
+	// Check if AI Service is configured
+	if BaseAIServiceURL == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "AI_SERVICE_URL environment variable is not set"})
+		return
+	}
+
 	// Call AI Service
 	req, err := http.NewRequestWithContext(c.Request.Context(), "POST", AIServiceURL, bytes.NewBuffer(requestBody))
 	if err != nil {
@@ -472,6 +484,7 @@ func AnalyzeClaim(c *gin.Context) {
 	// Use instrumented client
 	resp, err := httpClient.Do(req)
 	if err != nil {
+		log.Printf("Failed to call AI service: %v", err)
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to call AI service: " + err.Error()})
 		return
 	}

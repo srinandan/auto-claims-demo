@@ -37,6 +37,7 @@ LABEL org.opencontainers.image.url='https://github.com/srinandan/auto-claims-dem
     org.opencontainers.image.vendor='Google LLC' \
     org.opencontainers.image.licenses='Apache-2.0'
 COPY --from=builder /app/bin/backend /usr/local/bin/backend
+COPY --from=builder /app/claims.db claims.db
 
 ENV OTEL_SERVICE_NAME=auto-claims-backend
 ENV OTEL_TRACES_EXPORTER=otlp
