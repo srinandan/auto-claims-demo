@@ -29,5 +29,8 @@ export default defineConfig({
         secure: false,
       }
     }
-  }
+  },
+  define: {
+    'import.meta.env.VITE_OTLP_EXPORTER_URL': JSON.stringify(process.env.VITE_OTLP_EXPORTER_URL),
+  },
 })

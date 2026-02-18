@@ -19,6 +19,8 @@
     "@opentelemetry/sdk-trace-base": "^2.5.1",
     "@opentelemetry/sdk-trace-web": "^2.5.1",
     "@opentelemetry/semantic-conventions": "^1.39.0",
+    "@google-cloud/opentelemetry-cloud-trace-propagator": "^0.21.0",
+    "@opentelemetry/instrumentation": "^0.206.0",
     "@tailwindcss/vite": "^4.1.18",
     "autoprefixer": "^10.4.24",
     "axios": "^1.13.4",
