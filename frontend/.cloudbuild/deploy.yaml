@@ -58,7 +58,7 @@ steps:
       - "--service-account"
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars"
-      - 'VITE_API_BASE_URL="https://autoclaims.endpoints.${PROJECT_ID}.cloud.goog'
+      - 'VITE_API_BASE_URL="https://autoclaims.endpoints.${PROJECT_ID}.cloud.goog,API_BACKEND_SERVICE_URL=https://auto-claims-backend-${PROJECT_NUMBER}.${_REGION}.run.app'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances"
