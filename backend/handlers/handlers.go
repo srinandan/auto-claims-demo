@@ -624,3 +624,41 @@ func AnalyzeClaim(c *gin.Context) {
 
 	c.JSON(http.StatusOK, claim)
 }
+
+// DeleteClaim deletes a claim and its associations
+func DeleteClaim(c *gin.Context) {
+	id := c.Param("id")
+
+	// Delete associations first
+	// Note: GORM might handle this if cascading delete is set up, but doing it explicitly ensures it works with Unscoped
+	database.DB.Unscoped().Where("claim_id = ?", id).Delete(&models.Estimate{})
+
+	// We also need to delete Photos and their AnalysisResults.
+	// Since AnalysisResult depends on Photo, we should delete AnalysisResults for Photos of this Claim.
+	// This is getting complicated to do manually.
+	// But let's look at the models. Photo has gorm:"foreignKey:ClaimID".
+
+	// Find photos to delete their analysis results
+	var photos []models.Photo
+	database.DB.Unscoped().Where("claim_id = ?", id).Find(&photos)
+	for _, p := range photos {
+		database.DB.Unscoped().Where("photo_id = ?", p.ID).Delete(&models.AnalysisResult{})
+	}
+
+	database.DB.Unscoped().Where("claim_id = ?", id).Delete(&models.Photo{})
+
+	// Delete the claim
+	result := database.DB.Unscoped().Delete(&models.Claim{}, id)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Claim not found"})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}
