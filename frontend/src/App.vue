@@ -16,10 +16,11 @@
 
 <template>
   <div class="min-h-screen bg-gray-100">
-    <nav class="bg-blue-600 text-white p-4 shadow-md">
+    <nav class="bg-teal-600 text-white p-4 shadow-md">
       <div class="container mx-auto flex justify-between items-center">
         <router-link to="/" class="font-bold text-xl flex items-center gap-2">
-          <span>Claims Intake System</span>
+          <img src="/cymbal-logo.svg" alt="Cymbal Logo" class="h-8 w-8" />
+          <span>Cymbal Insurance</span>
         </router-link>
 
         <div v-if="user" class="flex items-center gap-4">
@@ -28,7 +29,7 @@
           </span>
           <button
             @click="logout"
-            class="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition-colors"
+            class="bg-teal-700 hover:bg-teal-800 text-white px-3 py-1 rounded text-sm transition-colors"
           >
             Logout
           </button>

@@ -69,7 +69,7 @@
           <div v-else-if="isChatOpen" class="flex flex-col h-full">
             <div class="flex-grow overflow-y-auto p-4 space-y-4" ref="chatContainer">
                 <div v-for="(msg, idx) in chatMessages" :key="idx" :class="['flex', msg.sender === 'user' ? 'justify-end' : 'justify-start']">
-                    <div :class="['max-w-[80%] rounded-lg px-4 py-2', msg.sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800']">
+                    <div :class="['max-w-[80%] rounded-lg px-4 py-2', msg.sender === 'user' ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-800']">
                         {{ msg.text }}
                     </div>
                 </div>
@@ -82,13 +82,13 @@
                     v-model="chatInput"
                     @keyup.enter="sendMessage"
                     type="text"
-                    class="flex-grow border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    class="flex-grow border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     placeholder="Type your message..."
                     :disabled="chatLoading"
                 />
                 <button
                     @click="sendMessage"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold disabled:opacity-50"
+                    class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded font-bold disabled:opacity-50"
                     :disabled="chatLoading || !chatInput.trim()"
                 >
                     Send
@@ -105,7 +105,7 @@
                 <p class="text-gray-600 mb-1">{{ selectedShop.address }}</p>
                 <p v-if="selectedShop.phone" class="text-gray-600 mb-4">{{ selectedShop.phone }}</p>
 
-                <div v-if="selectedShop.reasoning" class="bg-blue-50 p-4 rounded border border-blue-100 text-blue-800 italic">
+                <div v-if="selectedShop.reasoning" class="bg-teal-50 p-4 rounded border border-teal-100 text-teal-800 italic">
                     "{{ selectedShop.reasoning }}"
                 </div>
              </div>
@@ -129,7 +129,7 @@
                 @click="selectShop(shop)"
             >
               <div class="flex justify-between items-start">
-                <h3 class="font-bold text-lg text-blue-600">{{ shop.name }}</h3>
+                <h3 class="font-bold text-lg text-teal-600">{{ shop.name }}</h3>
                 <span v-if="shop.rating" class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded flex items-center">
                   ★ {{ shop.rating }}
                 </span>
@@ -168,7 +168,7 @@
           v-for="photo in claim.photos"
           :key="photo.ID"
           class="mb-4 cursor-pointer border-2 transition-colors relative"
-          :class="selectedPhoto?.ID === photo.ID ? 'border-blue-500' : 'border-transparent'"
+          :class="selectedPhoto?.ID === photo.ID ? 'border-teal-500' : 'border-transparent'"
           @click="selectPhoto(photo)"
         >
           <img
@@ -242,7 +242,7 @@
               <span
                 v-for="part in detectedParts"
                 :key="part"
-                class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded capitalize"
+                class="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded capitalize"
               >
                 {{ part.replace('_', ' ') }}
               </span>
@@ -309,7 +309,7 @@
         <div v-if="['Assessed', 'Approved', 'Review Required'].includes(claim.status)" class="mt-6 pt-4 border-t">
           <button
             @click="findRepairShops"
-            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex justify-center items-center"
+            class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded flex justify-center items-center"
           >
             <span class="mr-2">🔧</span> Find Repair Shops
           </button>
