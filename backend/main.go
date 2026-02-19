@@ -85,6 +85,7 @@ func main() {
 		api.GET("/claims/:id", handlers.GetClaim)
 		api.POST("/claims", handlers.CreateClaim)
 		api.PUT("/claims/:id", handlers.UpdateClaim)
+		api.DELETE("/claims/:id", handlers.DeleteClaim)
 		api.POST("/claims/:id/analyze", handlers.AnalyzeClaim)
 		api.POST("/claims/:id/repair-shops", handlers.FindRepairShops)
 		api.POST("/claims/:id/book-appointment", handlers.BookAppointment)

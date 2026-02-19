@@ -36,6 +36,12 @@
         >
           {{ analyzing ? 'Analyzing...' : 'Analyze with AI' }}
         </button>
+        <button
+          @click="deleteClaim"
+          class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+        >
+          Delete Claim
+        </button>
       </div>
     </div>
 
@@ -322,9 +328,10 @@
 <script setup>
 import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import axios from 'axios'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
+const router = useRouter()
 const claim = ref({})
 const loading = ref(true)
 const analyzing = ref(false)
@@ -517,6 +524,18 @@ const updateStatus = async (status) => {
     alert('Update failed')
   } finally {
     updating.value = false
+  }
+}
+
+const deleteClaim = async () => {
+  if (!confirm('Are you sure you want to permanently delete this claim?')) return
+
+  try {
+    await axios.delete(`/api/claims/${route.params.id}`)
+    router.push('/')
+  } catch (error) {
+    console.error('Error deleting claim:', error)
+    alert('Failed to delete claim')
   }
 }
 

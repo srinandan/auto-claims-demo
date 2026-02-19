@@ -70,12 +70,23 @@
         <div class="p-5">
           <div class="flex justify-between items-start mb-2">
             <span class="text-xs font-semibold text-gray-500">#{{ claim.ID }}</span>
-            <span
-              class="px-2 py-1 text-xs font-bold rounded-full uppercase tracking-wide"
-              :class="statusBadgeClass(claim.status)"
-            >
-              {{ claim.status }}
-            </span>
+            <div class="flex items-center gap-2">
+              <span
+                class="px-2 py-1 text-xs font-bold rounded-full uppercase tracking-wide"
+                :class="statusBadgeClass(claim.status)"
+              >
+                {{ claim.status }}
+              </span>
+              <button
+                @click.stop="deleteClaim(claim.ID)"
+                class="text-gray-400 hover:text-red-600 p-1"
+                title="Delete Claim"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
           </div>
           <h2 class="text-xl font-bold text-gray-800 mb-1">{{ claim.customer_name }}</h2>
           <p class="text-sm text-gray-600 mb-4">Date: {{ formatDate(claim.accident_date) }}</p>
@@ -406,6 +417,19 @@ const statusBadgeClass = (status) => {
     case 'Complex': return 'bg-yellow-100 text-yellow-800'
     case 'Total Loss': return 'bg-red-100 text-red-800'
     default: return 'bg-gray-100 text-gray-800'
+  }
+}
+
+const deleteClaim = async (id) => {
+  if (!confirm('Are you sure you want to permanently delete this claim?')) return
+
+  try {
+    await axios.delete(`/api/claims/${id}`)
+    // Remove from list
+    claims.value = claims.value.filter(c => c.ID !== id)
+  } catch (error) {
+    console.error('Error deleting claim:', error)
+    alert('Failed to delete claim')
   }
 }
 
