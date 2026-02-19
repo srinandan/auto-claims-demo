@@ -71,7 +71,7 @@ steps:
       - "--service-account"
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars"
-      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,BUCKET_NAME=${PROJECT_ID}-auto-claims,AI_SERVICE_URL=https://auto-claims-ai-service-${PROJECT_NUMBER}.${_REGION}.run.app'
+      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,BUCKET_NAME=${PROJECT_ID}-auto-claims,AI_SERVICE_URL=https://auto-claims-ai-service-${PROJECT_NUMBER}.${_REGION}.run.app,DATABASE_PATH=/home/nonroot/db/claims.db'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances"
@@ -84,6 +84,8 @@ steps:
       - "--ingress"
       - "internal-and-cloud-load-balancing"
       - "--labels=appid=auto-claims"
+      - "--add-volume=name=gcs-1,type=cloud-storage,bucket=${PROJECT_ID}-auto-claims"
+      - "--add-volume-mount=volume=gcs-1,mount-path=/home/nonroot/db"
 
 substitutions:
   _REGION: ${_REGION}

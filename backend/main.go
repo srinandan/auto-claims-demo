@@ -45,7 +45,7 @@ func main() {
 		PORT = "8080"
 	}
 
-	shutdown, err := telemetry.InitTelemetry(context.Background(), projectID, "claims-backend")
+	shutdown, err := telemetry.InitTelemetry(context.Background(), projectID, "auto-claims-backend")
 	if err != nil {
 		log.Printf("Failed to initialize telemetry: %v", err)
 	} else {
@@ -62,7 +62,7 @@ func main() {
 	r := gin.Default()
 
 	// Add OpenTelemetry middleware
-	r.Use(otelgin.Middleware("claims-backend"))
+	r.Use(otelgin.Middleware("auto-claims-backend"))
 
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
