@@ -17,6 +17,9 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
     <div class="max-w-md w-full bg-white rounded-lg shadow-md p-8">
+      <div class="flex justify-center mb-6">
+        <img src="/cymbal-logo.svg" alt="Cymbal Insurance" class="h-16 w-16" />
+      </div>
       <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Customer Login</h2>
 
       <form @submit.prevent="handleLogin">
@@ -26,7 +29,7 @@
           </label>
           <input
             v-model="policyNumber"
-            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-teal-500"
             id="policyNumber"
             type="text"
             placeholder="Enter your Policy Number"
@@ -39,7 +42,7 @@
             Password
           </label>
           <input
-            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-teal-500"
             id="password"
             type="password"
             placeholder="******************"
@@ -54,7 +57,7 @@
 
         <div class="flex items-center justify-between">
           <button
-            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full transition duration-150 ease-in-out"
+            class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full transition duration-150 ease-in-out"
             type="submit"
             :disabled="loading"
           >

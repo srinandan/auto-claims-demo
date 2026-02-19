@@ -21,7 +21,7 @@
       <div>
         <button
           @click="openModal"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center"
+          class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded flex items-center"
         >
           <span>+ New Claim</span>
         </button>
@@ -29,7 +29,7 @@
     </div>
 
     <!-- Policy Details Card -->
-    <div v-if="user" class="bg-white rounded-lg shadow p-6 mb-8 border-l-4 border-blue-500">
+    <div v-if="user" class="bg-white rounded-lg shadow p-6 mb-8 border-l-4 border-teal-500">
       <h2 class="text-xl font-bold text-gray-800 mb-4">My Policy Details</h2>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div>
@@ -246,8 +246,8 @@
                 file:mr-4 file:py-2 file:px-4
                 file:rounded-full file:border-0
                 file:text-sm file:font-semibold
-                file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100"
+                file:bg-teal-50 file:text-teal-700
+                hover:file:bg-teal-100"
               id="photos"
             />
             <div v-if="form.files.length > 0" class="mt-2 text-sm text-gray-600">
@@ -265,7 +265,7 @@
             </button>
             <button
               type="submit"
-              class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
+              class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
               :disabled="submitting"
             >
               <span v-if="submitting" class="mr-2">Submitting...</span>
