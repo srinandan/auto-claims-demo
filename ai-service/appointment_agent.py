@@ -1,12 +1,44 @@
 from google.adk.agents import LlmAgent
 from google.adk.runners import InMemoryRunner
 from google.genai.types import Content, Part
+from google.adk.plugins.bigquery_agent_analytics_plugin import (
+    BigQueryAgentAnalyticsPlugin,
+    BigQueryLoggerConfig,
+)
+from google.cloud import bigquery
 import json
 import asyncio
 import os
+import logging
 
 MOCK_MODE = os.environ.get("MOCK_MODE", "false").lower() == "true"
 mock_sessions = {}
+
+# Initialize BigQuery Analytics
+_plugins = []
+if not MOCK_MODE:
+    _project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    _dataset_id = os.environ.get("BQ_ANALYTICS_DATASET_ID", "adk_agent_analytics")
+    _location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+
+    if _project_id:
+        try:
+            bq = bigquery.Client(project=_project_id)
+            bq.create_dataset(f"{_project_id}.{_dataset_id}", exists_ok=True)
+
+            _plugins.append(
+                BigQueryAgentAnalyticsPlugin(
+                    project_id=_project_id,
+                    dataset_id=_dataset_id,
+                    location=_location,
+                    config=BigQueryLoggerConfig(
+                        gcs_bucket_name=os.environ.get("BQ_ANALYTICS_GCS_BUCKET"),
+                        connection_id=os.environ.get("BQ_ANALYTICS_CONNECTION_ID"),
+                    ),
+                )
+            )
+        except Exception as e:
+            logging.warning(f"Failed to initialize BigQuery Analytics: {e}")
 
 # Mock Tool for Appointment Booking
 def create_calendar_event(shop_name: str, date: str, time: str, customer_name: str) -> str:
@@ -83,7 +115,7 @@ async def run_appointment_agent(session_id: str, user_message: str, context: dic
 
     # Get or create runner
     if session_id not in sessions:
-        runner = InMemoryRunner(agent=appointment_agent)
+        runner = InMemoryRunner(agent=appointment_agent, plugins=_plugins)
         runner.auto_create_session = True
         sessions[session_id] = runner
 
