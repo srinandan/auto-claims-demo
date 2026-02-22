@@ -2,6 +2,8 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
+![Architecture Diagram](./infra/infra.png)
+
 This project is an **Auto Claims Processing Application** that streamlines the claims process by allowing users to submit claims and automatically analyzing vehicle images for damage using an AI service.
 
 The system consists of several microservices:
@@ -11,6 +13,7 @@ The system consists of several microservices:
 3.  **[AI Service](./ai-service/README.md)**: A specialized service built with **Python (FastAPI)** that uses **Vertex AI** and **YOLOv11** to analyze images and orchestrate the claims process.
 4.  **[Assessor Agent](./assessor-agent/README.md)**: A remote A2A agent that assesses damage severity based on AI analysis.
 5.  **[Processor Agent](./processor-agent/README.md)**: A remote A2A agent that generates repair estimates and makes final claim decisions.
+6.  **[Repair Shop Agent](./repair-shop-agent/README.md)**: A remote A2A agent that handles communication with repair shops to book appointments.
 
 ## Prerequisites
 
@@ -38,6 +41,11 @@ make local-assessor-agent
 cd processor-agent
 make local-processor-agent
 # Runs on http://localhost:8082
+
+# Terminal 3: Repair Shop Agent
+cd repair-shop-agent
+make local-repair-shop-agent
+# Runs on http://localhost:8083
 ```
 
 ### 2. Start the AI Service

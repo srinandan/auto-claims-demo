@@ -1,3 +1,5 @@
+[🔙 Back to Main Project README](../README.md)
+
 # Auto Claims AI Service
 
 This service handles image analysis for detecting vehicle damage using **Google Cloud Vertex AI / Gemini** and **YOLOv11**. It orchestrates the claims process by coordinating with specialized agents.

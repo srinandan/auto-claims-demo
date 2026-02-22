@@ -1,3 +1,5 @@
+[🔙 Back to Main Project README](../README.md)
+
 # Auto Claims Frontend
 
 This is the frontend application for the Auto Claims Demo, providing an interface for claim submission and AI-driven assessment results.
