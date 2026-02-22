@@ -23,7 +23,6 @@ from google.cloud import storage
 import io
 
 # Local imports
-from vision import detect_bounding_boxes
 from claims_agent import run_claims_agent
 from repair_shop_agent import run_repair_shop_agent
 from appointment_agent import run_appointment_agent
@@ -80,14 +79,6 @@ class Detection(BaseModel):
     box: List[float] # [x_min, y_min, x_max, y_max] normalized 0-1
     score: float = 1.0 # Default score if not provided by genai
 
-class AnalysisResponse(BaseModel):
-    photo_id: str
-    quality_score: str # "Good", "Blurry", "Dark"
-    detections: List[Detection]
-    parts_detected: List[str]
-    severity: str # "Low", "Medium", "High"
-    total_loss_probability: float # 0.0 to 1.0
-
 class ClaimsRequest(BaseModel):
     file_uris: List[str]
 
@@ -136,20 +127,6 @@ def read_image_from_gcs(uri: str) -> bytes:
 async def ping():
     return {"message": "AI Service is running"}
 
-@app.post("/analyze", response_model=AnalysisResponse)
-async def analyze_image(
-    file: UploadFile = File(...),
-    photo_id: str = Form(...)
-):
-    print(f"Analyzing photo {photo_id} in {'MOCK' if MOCK_MODE else 'REAL'} mode")
-
-    if MOCK_MODE:
-        return mock_analysis(photo_id)
-    else:
-        # Read file content for real analysis
-        content = await file.read()
-        return await real_analysis(content, photo_id)
-
 @app.post("/process-claims", response_model=ClaimsProcessResponse)
 async def process_claims(request: ClaimsRequest):
     print(f"Processing {len(request.file_uris)} URIs for claims agent.")
@@ -160,42 +137,68 @@ async def process_claims(request: ClaimsRequest):
     for uri in request.file_uris:
         try:
             if MOCK_MODE:
-                content = b"mock content"
+                # In mock mode, we skip real GCS reading and real detection
+                # But to keep the structure consistent, let's pretend we found something
+                # or just use empty if that's what's expected.
+                # The original code mocked content = b"mock content".
+                # And then detect_bounding_boxes(mock_content) would return mock boxes if MOCK_MODE inside vision.py.
+                # Here we are bypassing vision.py.
+                # We can call detector.detect_damage(mock_bytes) but detector might fail or try to load image.
+                # So let's handle MOCK_MODE here explicitly if we want mock detections.
+
+                # However, the user request is to use the HuggingFace model.
+                # If MOCK_MODE is true, we should probably return mock data directly without calling the model,
+                # OR call the model if it can run offline?
+                # The original code:
+                # if MOCK_MODE: content = b"mock content"
+                # boxes = detect_bounding_boxes(content) -> inside vision.py checked MOCK_MODE again.
+
+                # Let's replicate simple mock behavior here to avoid calling heavy model in mock mode if desired.
+                detections = [
+                    Detection(label="mock_dent", box=[0.1, 0.1, 0.2, 0.2], score=0.9)
+                ]
+                aggregated_findings.append("mock_dent")
+                photo_analyses[uri] = detections
+                continue
+
             else:
                 content = read_image_from_gcs(uri)
 
-            # Use Gemini to detect bounding boxes
-            boxes = detect_bounding_boxes(content)
-
+            # Use YOLO to detect damages
             detections = []
-            file_findings = []
 
-            for box in boxes:
-                # Convert 0-1000 [y_min, x_min, y_max, x_max] to 0-1 [x_min, y_min, x_max, y_max]
-                y_min, x_min, y_max, x_max = box.box_2d
-                box_normalized = [
-                    x_min / 1000.0,
-                    y_min / 1000.0,
-                    x_max / 1000.0,
-                    y_max / 1000.0
-                ]
+            if detector:
+                try:
+                     # Run detection in threadpool since it's CPU bound (or GPU bound via C++ extensions)
+                    result = await run_in_threadpool(detector.detect_damage, content)
+                    height, width = result['image_shape']
 
-                detections.append(Detection(
-                    label=box.label,
-                    box=box_normalized,
-                    score=1.0
-                ))
+                    for d in result['damages']:
+                        x1, y1, x2, y2 = d['bbox']
+                        # Normalize to 0-1
+                        box_normalized = [
+                            x1 / width,
+                            y1 / height,
+                            x2 / width,
+                            y2 / height
+                        ]
 
-                # Add to findings (e.g. "dent on bumper")
-                file_findings.append(box.label)
-                aggregated_findings.append(box.label)
+                        detections.append(Detection(
+                            label=d['type'],
+                            box=box_normalized,
+                            score=d['confidence']
+                        ))
+
+                        aggregated_findings.append(d['type'])
+                except Exception as e:
+                    print(f"Error running detector on {uri}: {e}")
+            else:
+                print("Detector not initialized")
 
             photo_analyses[uri] = detections
 
         except Exception as e:
             print(f"Error processing file {uri}: {e}")
-            # Continue with other files or fail?
-            # For now, log and continue, maybe empty detection
             photo_analyses[uri] = []
 
     # Run Sequential Agent
@@ -274,72 +277,6 @@ def mock_claims_agent_response(findings):
             "total_cost": 700.00
         }
     }
-
-def mock_analysis(photo_id):
-    # Return hardcoded sample data
-    # We'll return a generic 'damage found' response
-    return {
-        "photo_id": photo_id,
-        "quality_score": "Good",
-        "detections": [
-            {"label": "dent", "box": [0.2, 0.3, 0.4, 0.5], "score": 0.95},
-            {"label": "scratch", "box": [0.6, 0.6, 0.8, 0.65], "score": 0.88}
-        ],
-        "parts_detected": ["front_bumper", "hood"],
-        "severity": "Medium",
-        "total_loss_probability": 0.15
-    }
-
-async def real_analysis(content, photo_id):
-    if detector is None:
-        print("Detector not initialized, falling back to mock.")
-        return mock_analysis(photo_id)
-
-    try:
-        # Run detection in threadpool since it's CPU bound
-        result = await run_in_threadpool(detector.detect_damage, content)
-
-        detections = []
-        height, width = result['image_shape']
-
-        for d in result['damages']:
-            x1, y1, x2, y2 = d['bbox']
-            # Normalize to 0-1
-            detections.append(Detection(
-                label=d['type'],
-                box=[x1/width, y1/height, x2/width, y2/height],
-                score=d['confidence']
-            ))
-
-        # Map severity
-        severity_map = {
-            "light": "Low",
-            "moderate": "Medium",
-            "severe": "High",
-            "none": "Low"
-        }
-        severity = severity_map.get(result['highest_severity'], "Medium")
-
-        # Estimate total loss probability based on severity
-        loss_prob_map = {
-            "Low": 0.1,
-            "Medium": 0.4,
-            "High": 0.8
-        }
-        loss_prob = loss_prob_map.get(severity, 0.1)
-
-        return AnalysisResponse(
-            photo_id=photo_id,
-            quality_score="Good",
-            detections=detections,
-            parts_detected=[], # Part detection not available in this model
-            severity=severity,
-            total_loss_probability=loss_prob
-        )
-
-    except Exception as e:
-        print(f"Error in real_analysis: {e}")
-        return mock_analysis(photo_id)
 
 if __name__ == "__main__":
     import uvicorn
