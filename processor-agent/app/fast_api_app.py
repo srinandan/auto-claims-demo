@@ -30,7 +30,8 @@ from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
 from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import InMemorySessionService, VertexAiSessionService
+from google.adk.memory import VertexAiMemoryBankService
 from google.cloud import logging as google_cloud_logging
 
 from app.agent import app as adk_app
@@ -52,10 +53,13 @@ artifact_service = (
     else InMemoryArtifactService()
 )
 
+location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+
 runner = Runner(
     app=adk_app,
     artifact_service=artifact_service,
-    session_service=InMemorySessionService(),
+    session_service=VertexAiSessionService(project=project_id, location=location),
+    memory_service=VertexAiMemoryBankService(project=project_id, location=location),
 )
 
 request_handler = DefaultRequestHandler(

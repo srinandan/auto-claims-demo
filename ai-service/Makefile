@@ -6,6 +6,7 @@ _COMMIT_SHA ?= $(shell echo | find uv.lock *.py -type f -print0 | sort -z | xarg
 ASSESSOR_AGENT_URL ?= http://localhost:8081
 PROCESSOR_AGENT_URL ?= http://localhost:8082
 PORT ?= 8000
+AGENT_ENGINE_ENABLED ?= false
 
 .PHONY: local-ai-service
 
@@ -20,6 +21,7 @@ local-ai-service:
 	export PROCESSOR_AGENT_URL=${PROCESSOR_AGENT_URL} ;\
 	export OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT ;\
 	export PORT=${PORT} ;\
+	export AGENT_ENGINE_ENABLED=${AGENT_ENGINE_ENABLED} ;\
 	uv run main.py
 
 ai-service:

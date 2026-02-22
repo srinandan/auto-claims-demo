@@ -76,7 +76,7 @@ steps:
       - "--service-account" 
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars" 
-      - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,ASSESSOR_AGENT_URL=https://auto-claims-assessor-agent-${PROJECT_NUMBER}.${_REGION}.run.app,PROCESSOR_AGENT_URL=https://auto-claims-processor-agent-${PROJECT_NUMBER}.${_REGION}.run.app,BUCKET_NAME=${PROJECT_ID}-auto-claims'
+      - 'REASONING_ENGINE_ID=6449421847720099840,AGENT_ENGINE_ENABLED=${_AGENT_ENGINE_ENABLED},GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,ASSESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/6449421847720099840,PROCESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/1644081045315780608,BUCKET_NAME=${PROJECT_ID}-auto-claims'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max-instances" 
@@ -97,12 +97,15 @@ substitutions:
   _ARTIFACT_REGISTRY_REPO_NAME: auto-claims
   _CONTAINER_NAME: auto-claims-ai-service
   _COMMIT_SHA: ${_COMMIT_SHA}
+  _AGENT_ENGINE_ENABLED: "true"
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest
 
 options:
+  pool:
+    name: "projects/$PROJECT_ID/locations/$LOCATION/workerPools/auto-claims"
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: ALLOW_LOOSE
   requestedVerifyOption: VERIFIED

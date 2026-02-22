@@ -32,7 +32,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project
 
 # Copy source code and install project (Fast layer)
-COPY *.py README.md ./
+COPY *.py ./
 RUN uv sync --frozen
 
 ARG COMMIT_SHA=""

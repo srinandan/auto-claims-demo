@@ -179,12 +179,12 @@ def setup_agent_identity(client: Any, project: str, display_name: str) -> Any:
 )
 @click.option(
     "--display-name",
-    default="assessor-agent",
+    default="auto-claims-assessor-agent",
     help="Display name for the agent engine",
 )
 @click.option(
     "--description",
-    default="ReAct agent with A2A protocol [experimental]",
+    default="Assessor Agent that evaluates damage severity based on findings.",
     help="Description of the agent",
 )
 @click.option(

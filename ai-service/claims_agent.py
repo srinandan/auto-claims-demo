@@ -15,16 +15,65 @@
 import os
 from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+from google.adk.sessions import VertexAiSessionService
 from google.adk.agents import LlmAgent, SequentialAgent
-from google.adk.runners import InMemoryRunner
+from google.adk.runners import InMemoryRunner, Runner
 from google.genai.types import Content, Part
 import json
 import uuid
 import re
+import httpx
+from a2a.client import ClientConfig, ClientFactory
+from a2a.types import TransportProtocol
+from google.auth.transport.requests import Request
+from google.auth import default
 
+factory = None
+
+class GoogleAuth(httpx.Auth):
+    def __init__(self):
+        try:
+            self.credentials, _ = default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
+            self.request = Request()
+        except Exception as e:
+            print(f"Error getting credentials: {e}")
+            print("Please ensure you have authenticated with 'gcloud auth application-default login'.")
+            self.credentials = None
+            self.request = None
+
+    def auth_flow(self, request):
+        if self.credentials:
+            if not self.credentials.valid:
+                try:
+                    self.credentials.refresh(self.request)
+                except Exception as e:
+                    print(f"Error refreshing credentials: {e}")
+            if self.credentials.token:
+                request.headers["Authorization"] = f"Bearer {self.credentials.token}"
+        yield request
 
 ASSESSOR_AGENT_URL = os.getenv("ASSESSOR_AGENT_URL")
 PROCESSOR_AGENT_URL = os.getenv("PROCESSOR_AGENT_URL")
+AGENT_ENGINE_ENABLED = os.getenv("AGENT_ENGINE_ENABLED", "false")
+
+if AGENT_ENGINE_ENABLED == "true":
+    ASSESSOR_AGENT_CARD_URL = f"{ASSESSOR_AGENT_URL}/a2a/v1/card"
+    PROCESSOR_AGENT_CARD_URL = f"{PROCESSOR_AGENT_URL}/a2a/v1/card"
+    factory = ClientFactory(
+        ClientConfig(
+            # Specify supported transport mechanisms
+            supported_transports=[TransportProtocol.http_json],
+            # Use client preferences for protocol negotiation
+            use_client_preference=True,
+            # Configure HTTP client with authentication            
+            httpx_client=httpx.AsyncClient(
+                auth=GoogleAuth(),
+            ),
+        )
+    )    
+else:
+    ASSESSOR_AGENT_CARD_URL = f"{ASSESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}"
+    PROCESSOR_AGENT_CARD_URL = f"{PROCESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}"
 
 # Assessor Agent
 assessor_agent = RemoteA2aAgent(
@@ -32,8 +81,8 @@ assessor_agent = RemoteA2aAgent(
         description=(
             "Assess damage severity based on findings."
         ),
-        agent_card=f"{ASSESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}",
-        # a2a_client_factory=factory,
+        agent_card=ASSESSOR_AGENT_CARD_URL,
+        a2a_client_factory=factory,
 )
 
 # Processor Agent
@@ -42,8 +91,8 @@ processor_agent = RemoteA2aAgent(
         description=(
             "Generate repair cost and decision."
         ),
-        agent_card=f"{PROCESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}",
-        # a2a_client_factory=factory,
+        agent_card=PROCESSOR_AGENT_CARD_URL,
+        a2a_client_factory=factory,
 )
 
 # Sequential Agent
@@ -60,6 +109,12 @@ async def run_claims_agent(findings: list[str]) -> dict:
     Returns the final result dictionary.
     """
 
+    session_service = VertexAiSessionService(
+        project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+        location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+        agent_engine_id=os.getenv("REASONING_ENGINE_ID")
+    )    
+
     # Prepare input text
     findings_text = "\n".join([f"- {f}" for f in findings])
     prompt_text = f"Here are the damage findings from the vehicle images:\n{findings_text}\n\nPlease assess and process this claim."
@@ -67,15 +122,28 @@ async def run_claims_agent(findings: list[str]) -> dict:
     # Create Content object
     prompt_content = Content(parts=[Part(text=prompt_text)])
 
-    runner = InMemoryRunner(agent=claims_sequential_agent)
+    #runner = InMemoryRunner(agent=claims_sequential_agent)
+    runner = Runner(
+        agent=claims_sequential_agent,
+        app_name="auto-claims-ai-service",
+        session_service=session_service
+    )
     runner.auto_create_session = True
-    session_id = str(uuid.uuid4())
+    # session_id = str(uuid.uuid4())
     user_id = "system" # internal usage
+
+    app_name = f"projects/{os.getenv("GOOGLE_CLOUD_PROJECT")}/locations/{os.getenv("GOOGLE_CLOUD_LOCATION")}/reasoningEngines/{os.getenv("REASONING_ENGINE_ID")}"
+    session = await session_service.create_session(
+       app_name=app_name,
+       user_id=user_id,
+       # Set TTL for 1 day
+       ttl=f"{24 * 60 * 60 * 1}s"
+    )
 
     final_text = ""
 
     # Run asynchronously
-    async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=prompt_content):
+    async for event in runner.run_async(user_id=user_id, session_id=session.id, new_message=prompt_content):
         # Accumulate text from events
         if hasattr(event, 'text') and event.text:
             final_text += event.text

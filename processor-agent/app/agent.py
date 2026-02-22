@@ -33,7 +33,8 @@ import google.auth
 
 _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
+    os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # Tool for generating mock repair costs
