@@ -6,34 +6,60 @@ import json
 import uuid
 import re
 
+factory = None
+
+class GoogleAuth(httpx.Auth):
+    def __init__(self):
+        try:
+            self.credentials, _ = default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
+            self.request = Request()
+        except Exception as e:
+            print(f"Error getting credentials: {e}")
+            print("Please ensure you have authenticated with 'gcloud auth application-default login'.")
+            self.credentials = None
+            self.request = None
+
+    def auth_flow(self, request):
+        if self.credentials:
+            if not self.credentials.valid:
+                try:
+                    self.credentials.refresh(self.request)
+                except Exception as e:
+                    print(f"Error refreshing credentials: {e}")
+            if self.credentials.token:
+                request.headers["Authorization"] = f"Bearer {self.credentials.token}"
+        yield request
+
 # Repair Shop Agent Definition
 MODEL_NAME = "gemini-2.5-flash"
 
-repair_shop_agent = LlmAgent(
-    name="RepairShopAgent",
-    model=MODEL_NAME,
-    description="Finds local auto repair shops using Google Search.",
-    instruction="""
-    You are an expert assistant helping users find auto repair shops.
-    The user will provide their location (Zip Code, City, State), Vehicle details (Make, Model, Year), and Damage description.
+REPAIR_SHOP_AGENT_URL = os.getenv("REPAIR_SHOP_AGENT_URL")
+AGENT_ENGINE_ENABLED = os.getenv("AGENT_ENGINE_ENABLED", "false")
 
-    Your task:
-    1. Use Google Search to find 3-5 highly-rated auto body repair shops near the provided location.
-    2. Look for shops that specialize in the specific vehicle make or type of damage if possible.
-    3. Return a JSON list of objects. Each object must have the following keys:
-       - "name": The name of the shop.
-       - "address": The full address of the shop.
-       - "rating": The average rating (e.g., 4.5) as a number, or null if not found.
-       - "phone": The phone number, or null if not found.
-       - "reasoning": A brief explanation of why this shop is a good fit (e.g., "Specializes in BMW repair", "High rating for dent removal").
+if AGENT_ENGINE_ENABLED == "true":
+    REPAIR_SHOP_AGENT_CARD_URL = f"{REPAIR_SHOP_AGENT_URL}/a2a/v1/card"
+    factory = ClientFactory(
+        ClientConfig(
+            # Specify supported transport mechanisms
+            supported_transports=[TransportProtocol.http_json],
+            # Use client preferences for protocol negotiation
+            use_client_preference=True,
+            # Configure HTTP client with authentication            
+            httpx_client=httpx.AsyncClient(
+                auth=GoogleAuth(),
+            ),
+        )
+    )    
+else:
+    REPAIR_SHOP_AGENT_CARD_URL = f"{REPAIR_SHOP_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}"
 
-    IMPORTANT:
-    - Output ONLY valid JSON.
-    - Do not include markdown formatting (like ```json ... ```).
-    - If you cannot find any shops, return an empty list [].
-    """,
-    tools=[google_search],
-    output_key="shops"
+repair_shop_agent = RemoteA2aAgent(
+        name="repair_shop_agent",
+        description=(
+            "Finds local auto repair shops using Google Search."
+        ),
+        agent_card=REPAIR_SHOP_AGENT_CARD_URL,
+        a2a_client_factory=factory,
 )
 
 async def run_repair_shop_agent(zip_code: str, state: str, make: str, model: str, damage_type: str) -> list:
@@ -51,18 +77,32 @@ async def run_repair_shop_agent(zip_code: str, state: str, make: str, model: str
     Find the best repair shops near this location.
     """
 
+    # session_service = VertexAiSessionService(
+    #     project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+    #     location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+    #     agent_engine_id=os.getenv("REASONING_ENGINE_ID")
+    # )
+    session_service = InMemorySessionService()    
+
     # Create Content object
     prompt_content = Content(parts=[Part(text=prompt_text)])
 
-    runner = InMemoryRunner(agent=repair_shop_agent)
-    runner.auto_create_session = True
-    session_id = str(uuid.uuid4())
-    user_id = "system"
+    runner = Runner(
+        agent=repair_shop_agent,
+        app_name=os.getenv("REASONING_ENGINE_ID"),
+        session_service=session_service
+    )
+    user_id = "system" # internal usage
 
     final_text = ""
 
+    session = await session_service.create_session(
+       app_name=os.getenv("REASONING_ENGINE_ID"),
+       user_id=user_id
+    )
+
     # Run asynchronously
-    async for event in runner.run_async(user_id=user_id, session_id=session_id, new_message=prompt_content):
+    async for event in runner.run_async(user_id=user_id, session_id=session.id, new_message=prompt_content):
         # Accumulate text from events
         if hasattr(event, 'text') and event.text:
             final_text += event.text

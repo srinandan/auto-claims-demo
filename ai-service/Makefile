@@ -5,6 +5,7 @@ BUCKET_NAME ?= $(shell echo ${PROJECT_ID}-auto-claims)
 _COMMIT_SHA ?= $(shell echo | find uv.lock *.py -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 ASSESSOR_AGENT_URL ?= http://localhost:8081
 PROCESSOR_AGENT_URL ?= http://localhost:8082
+REPAIR_SHOP_AGENT_URL ?= http://localhost:8083
 PORT ?= 8000
 AGENT_ENGINE_ENABLED ?= false
 
@@ -19,6 +20,7 @@ local-ai-service:
 	export MOCK_MODE=false ;\
 	export ASSESSOR_AGENT_URL=${ASSESSOR_AGENT_URL} ;\
 	export PROCESSOR_AGENT_URL=${PROCESSOR_AGENT_URL} ;\
+	export REPAIR_SHOP_AGENT_URL=${REPAIR_SHOP_AGENT_URL} ;\
 	export OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT ;\
 	export PORT=${PORT} ;\
 	export AGENT_ENGINE_ENABLED=${AGENT_ENGINE_ENABLED} ;\
