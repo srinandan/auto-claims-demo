@@ -14,6 +14,7 @@ dependencies = [
     "google-genai",
     "google-adk[a2a]",
     "google-cloud-storage>=3.9.0",
+    "google-cloud-bigquery",
     "ultralytics>=8.4.13",
     "opencv-python-headless>=4.13.0.92",
     "pillow>=12.1.0",
