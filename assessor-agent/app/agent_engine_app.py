@@ -133,7 +133,14 @@ class SafeVertexAiSessionService(VertexAiSessionService):
         print(f"get_session: app_name={app_name}, user_id={user_id}, session_id={session_id}, config={config}")
 
         if app_name is None or app_name == "app":
-            app_name = os.getenv("REASONING_ENGINE_ID") or os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ID")
+            project = os.getenv("GOOGLE_CLOUD_PROJECT")
+            location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+            engine_id = os.getenv("REASONING_ENGINE_ID") or os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ID")
+
+            if project and location and engine_id:
+                app_name = f"projects/{project}/locations/{location}/reasoningEngines/{engine_id}"
+            else:
+                app_name = engine_id
 
         if not session_id:
             if config is None:
