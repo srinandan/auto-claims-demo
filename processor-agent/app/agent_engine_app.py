@@ -27,7 +27,7 @@ from google.adk.apps import App
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
 from google.adk.memory import VertexAiMemoryBankService
 from google.adk.runners import Runner
-from google.adk.sessions import VertexAiSessionService
+from google.adk.sessions import VertexAiSessionService, InMemorySessionService
 from google.cloud import logging as google_cloud_logging
 from vertexai.preview.reasoning_engines import A2aAgent
 
@@ -121,41 +121,6 @@ class AgentEngineApp(A2aAgent):
         return self
 
 
-class SafeVertexAiSessionService(VertexAiSessionService):
-    async def get_session(
-        self,
-        *,
-        app_name: str,
-        user_id: str,
-        session_id: str,
-        config=None,
-    ):
-        print(f"get_session: app_name={app_name}, user_id={user_id}, session_id={session_id}, config={config}")
-
-        if app_name is None or app_name == "app":
-            app_name = os.getenv("REASONING_ENGINE_ID") or os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ID")
-
-        if not session_id:
-            if config is None:
-                config = {}
-            config["ttl"] = f"{24 * 60 * 60 * 1}s"
-            if app_name is None:
-                app_name = os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ID")
-            if user_id is None:
-                user_id =  "system"
-            return await super().create_session(
-                app_name=app_name,
-                user_id=user_id,
-                config=config
-            )
-        return await super().get_session(
-            app_name=app_name,
-            user_id=user_id,
-            session_id=session_id,
-            config=config
-        )
-
-
 _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
@@ -169,14 +134,15 @@ agent_engine = AgentEngineApp.create(
         if logs_bucket_name
         else InMemoryArtifactService()
     ),
-    session_service=SafeVertexAiSessionService(
-        project=project_id,
-        location=gemini_location,
-        agent_engine_id=os.environ.get("REASONING_ENGINE_ID")
-    ),
+    # session_service=SafeVertexAiSessionService(
+    #     project=project_id,
+    #     location=gemini_location,
+    #     agent_engine_id=os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID")
+    # ),
+    session_service=InMemorySessionService(),
     memory_service=VertexAiMemoryBankService(
         project=project_id,
         location=gemini_location,
-        agent_engine_id=os.environ.get("REASONING_ENGINE_ID")
+        agent_engine_id=os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID")
     ),
 )

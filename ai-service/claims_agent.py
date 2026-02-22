@@ -15,7 +15,7 @@
 import os
 from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
-from google.adk.sessions import VertexAiSessionService
+from google.adk.sessions import VertexAiSessionService, InMemorySessionService
 from google.adk.agents import LlmAgent, SequentialAgent
 from google.adk.runners import InMemoryRunner, Runner
 from google.genai.types import Content, Part
@@ -109,11 +109,12 @@ async def run_claims_agent(findings: list[str]) -> dict:
     Returns the final result dictionary.
     """
 
-    session_service = VertexAiSessionService(
-        project=os.getenv("GOOGLE_CLOUD_PROJECT"),
-        location=os.getenv("GOOGLE_CLOUD_LOCATION"),
-        agent_engine_id=os.getenv("REASONING_ENGINE_ID")
-    )    
+    # session_service = VertexAiSessionService(
+    #     project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+    #     location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+    #     agent_engine_id=os.getenv("REASONING_ENGINE_ID")
+    # )
+    session_service = InMemorySessionService()
 
     # Prepare input text
     findings_text = "\n".join([f"- {f}" for f in findings])
@@ -122,22 +123,16 @@ async def run_claims_agent(findings: list[str]) -> dict:
     # Create Content object
     prompt_content = Content(parts=[Part(text=prompt_text)])
 
-    #runner = InMemoryRunner(agent=claims_sequential_agent)
     runner = Runner(
         agent=claims_sequential_agent,
-        app_name="auto-claims-ai-service",
+        app_name=os.getenv("REASONING_ENGINE_ID"),
         session_service=session_service
     )
-    runner.auto_create_session = True
-    # session_id = str(uuid.uuid4())
     user_id = "system" # internal usage
 
-    app_name = f"projects/{os.getenv("GOOGLE_CLOUD_PROJECT")}/locations/{os.getenv("GOOGLE_CLOUD_LOCATION")}/reasoningEngines/{os.getenv("REASONING_ENGINE_ID")}"
     session = await session_service.create_session(
-       app_name=app_name,
-       user_id=user_id,
-       # Set TTL for 1 day
-       ttl=f"{24 * 60 * 60 * 1}s"
+       app_name=os.getenv("REASONING_ENGINE_ID"),
+       user_id=user_id
     )
 
     final_text = ""
