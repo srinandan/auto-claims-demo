@@ -34,7 +34,6 @@ from vertexai.preview.reasoning_engines import A2aAgent
 from app.agent import app as adk_app
 from app.app_utils.telemetry import setup_telemetry
 from app.app_utils.typing import Feedback
-import google.auth
 
 # Load environment variables from .env file at runtime
 load_dotenv()
@@ -132,6 +131,10 @@ class SafeVertexAiSessionService(VertexAiSessionService):
         config=None,
     ):
         print(f"get_session: app_name={app_name}, user_id={user_id}, session_id={session_id}, config={config}")
+
+        if app_name is None or app_name == "app":
+            app_name = os.getenv("REASONING_ENGINE_ID") or os.getenv("GOOGLE_CLOUD_AGENT_ENGINE_ID")
+
         if not session_id:
             if config is None:
                 config = {}
@@ -141,14 +144,14 @@ class SafeVertexAiSessionService(VertexAiSessionService):
             if user_id is None:
                 user_id =  "system"
             return await super().create_session(
-                app_name=app_name, 
-                user_id=user_id, 
+                app_name=app_name,
+                user_id=user_id,
                 config=config
             )
         return await super().get_session(
-            app_name=app_name, 
-            user_id=user_id, 
-            session_id=session_id, 
+            app_name=app_name,
+            user_id=user_id,
+            session_id=session_id,
             config=config
         )
 
@@ -168,12 +171,12 @@ agent_engine = AgentEngineApp.create(
         else InMemoryArtifactService()
     ),
     session_service=SafeVertexAiSessionService(
-        project=project_id, 
+        project=project_id,
         location=gemini_location,
         agent_engine_id=os.environ.get("REASONING_ENGINE_ID")
     ),
     memory_service=VertexAiMemoryBankService(
-        project=project_id, 
+        project=project_id,
         location=gemini_location,
         agent_engine_id=os.environ.get("REASONING_ENGINE_ID")
     ),

@@ -29,9 +29,9 @@ from fastapi import FastAPI
 from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
 from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService, VertexAiSessionService
 from google.adk.memory import VertexAiMemoryBankService
+from google.adk.runners import Runner
+from google.adk.sessions import VertexAiSessionService
 from google.cloud import logging as google_cloud_logging
 
 from app.agent import app as adk_app
