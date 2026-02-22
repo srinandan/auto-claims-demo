@@ -344,6 +344,8 @@ func CreateClaim(c *gin.Context) {
 			accidentDate, err = time.Parse(time.RFC3339, accidentDateStr)
 			if err != nil {
 				fmt.Printf("Error parsing accident date %s: %v\n", accidentDateStr, err)
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid accident date format. Use YYYY-MM-DD or RFC3339"})
+				return
 			}
 		}
 	}
