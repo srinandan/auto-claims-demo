@@ -29,12 +29,12 @@
       </div>
       <div class="space-x-2">
         <button
-          v-if="claim.status === 'New'"
+          v-if="!['Approved', 'Total Loss'].includes(claim.status)"
           @click="analyzeClaim"
           class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
           :disabled="analyzing"
         >
-          {{ analyzing ? 'Analyzing...' : 'Analyze with AI' }}
+          {{ analyzing ? 'Analyzing...' : (claim.status === 'New' ? 'Analyze with AI' : 'Re-Analyze with AI') }}
         </button>
         <button
           @click="deleteClaim"
