@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM python:3.12-slim-bookworm
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+# FROM python:3.12-slim-bookworm
+# COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Install system dependencies required by OpenCV and Ultralytics
-RUN apt-get update && apt-get install -y \
-    libgl1 \
-    libglib2.0-0 \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+# RUN apt-get update && apt-get install -y \
+#     libgl1 \
+#     libglib2.0-0 \
+#     gcc \
+#    && rm -rf /var/lib/apt/lists/*
+# --------------------------- USE BASE IMAGE --------------------------------
+FROM us-central1-docker.pkg.dev/srinandans-next25-demo/auto-claims/auto-claims-ai-service-base:latest
 
 WORKDIR /code
 
