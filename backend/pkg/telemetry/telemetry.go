@@ -37,10 +37,11 @@ import (
 func InitTelemetry(ctx context.Context, projectID, serviceName string) (func(context.Context) error, error) {
 	// Define resource attributes
 	res, err := resource.New(ctx,
+		resource.WithDetectors(gcpdetector.NewDetector()),
+		resource.WithTelemetrySDK(),
 		resource.WithAttributes(
 			semconv.ServiceNameKey.String(serviceName),
 		),
-		// Add auto-detection for GCP resource if needed, but manual is safer for now
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
