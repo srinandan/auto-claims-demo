@@ -56,6 +56,12 @@ ASSESSOR_AGENT_URL = os.getenv("ASSESSOR_AGENT_URL")
 PROCESSOR_AGENT_URL = os.getenv("PROCESSOR_AGENT_URL")
 AGENT_ENGINE_ENABLED = os.getenv("AGENT_ENGINE_ENABLED", "false")
 
+reasoningEngineId = ""
+
+def get_last_element(url_string):
+    return url_string.split('/')[-1]
+
+
 if AGENT_ENGINE_ENABLED == "true":
     ASSESSOR_AGENT_CARD_URL = f"{ASSESSOR_AGENT_URL}/a2a/v1/card"
     PROCESSOR_AGENT_CARD_URL = f"{PROCESSOR_AGENT_URL}/a2a/v1/card"
@@ -70,7 +76,8 @@ if AGENT_ENGINE_ENABLED == "true":
                 auth=GoogleAuth(),
             ),
         )
-    )    
+    )
+    reasoningEngineId = get_last_element(ASSESSOR_AGENT_URL)
 else:
     ASSESSOR_AGENT_CARD_URL = f"{ASSESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}"
     PROCESSOR_AGENT_CARD_URL = f"{PROCESSOR_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}"
@@ -125,13 +132,13 @@ async def run_claims_agent(findings: list[str]) -> dict:
 
     runner = Runner(
         agent=claims_sequential_agent,
-        app_name=os.getenv("REASONING_ENGINE_ID"),
+        app_name=reasoningEngineId,
         session_service=session_service
     )
     user_id = "system" # internal usage
 
     session = await session_service.create_session(
-       app_name=os.getenv("REASONING_ENGINE_ID"),
+       app_name=reasoningEngineId,
        user_id=user_id
     )
 
