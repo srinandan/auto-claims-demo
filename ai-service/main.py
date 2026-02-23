@@ -30,6 +30,9 @@ from car_damage_detector import CarDamageDetector
 from fastapi.concurrency import run_in_threadpool
 from telemetry import setup_telemetry
 
+from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 import google.auth
 
 PORT = int(os.environ.get("PORT", "8000"))
@@ -45,6 +48,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+HTTPXClientInstrumentor().instrument()
+FastAPIInstrumentor.instrument_app(app)
 
 # Configuration
 MOCK_MODE = os.environ.get("MOCK_MODE", "false").lower() == "true"
