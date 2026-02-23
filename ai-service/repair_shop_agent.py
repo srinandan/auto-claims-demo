@@ -5,8 +5,19 @@ from google.genai.types import Content, Part
 import json
 import uuid
 import re
+import httpx
+import os
+from google.adk.sessions import InMemorySessionService
+from google.adk.runners import Runner
+from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
+from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
+from a2a.client import ClientConfig, ClientFactory
+from a2a.types import TransportProtocol
+from google.auth.transport.requests import Request
+from google.auth import default
 
 factory = None
+reasoningEngineId = ""
 
 class GoogleAuth(httpx.Auth):
     def __init__(self):
@@ -30,6 +41,9 @@ class GoogleAuth(httpx.Auth):
                 request.headers["Authorization"] = f"Bearer {self.credentials.token}"
         yield request
 
+def get_last_element(url_string):
+    return url_string.split('/')[-1]
+
 # Repair Shop Agent Definition
 MODEL_NAME = "gemini-2.5-flash"
 
@@ -47,9 +61,11 @@ if AGENT_ENGINE_ENABLED == "true":
             # Configure HTTP client with authentication            
             httpx_client=httpx.AsyncClient(
                 auth=GoogleAuth(),
+                timeout=60.0
             ),
         )
-    )    
+    )
+    reasoningEngineId = get_last_element(REPAIR_SHOP_AGENT_URL)
 else:
     REPAIR_SHOP_AGENT_CARD_URL = f"{REPAIR_SHOP_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}"
 
@@ -89,7 +105,7 @@ async def run_repair_shop_agent(zip_code: str, state: str, make: str, model: str
 
     runner = Runner(
         agent=repair_shop_agent,
-        app_name=os.getenv("REASONING_ENGINE_ID"),
+        app_name=reasoningEngineId,
         session_service=session_service
     )
     user_id = "system" # internal usage
@@ -97,7 +113,7 @@ async def run_repair_shop_agent(zip_code: str, state: str, make: str, model: str
     final_text = ""
 
     session = await session_service.create_session(
-       app_name=os.getenv("REASONING_ENGINE_ID"),
+       app_name=reasoningEngineId,
        user_id=user_id
     )
 
