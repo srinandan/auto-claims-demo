@@ -15,6 +15,7 @@ import asyncio
 import logging
 import os
 from typing import Any
+from dotenv import load_dotenv
 
 import google.auth
 import nest_asyncio
@@ -86,7 +87,7 @@ class AgentEngineApp(A2aAgent):
             agent=app.root_agent,
             # Agent Engine does not support streaming yet
             capabilities=AgentCapabilities(streaming=False),
-            rpc_url="http://localhost:9999/",
+            rpc_url=f"https://{gemini_location}-aiplatform.googleapis.com/v1beta1/projects/{project_id}/locations/{gemini_location}/reasoningEngines/{engine_id}/a2a",
             agent_version=os.getenv("AGENT_VERSION", "0.1.0"),
         )
         agent_card = await agent_card_builder.build()
@@ -126,6 +127,7 @@ os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
     os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 gemini_location = os.environ.get("GOOGLE_CLOUD_LOCATION")
+engine_id = os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID") or os.environ.get("REASONING_ENGINE_ID")
 logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
 agent_engine = AgentEngineApp.create(
     app=adk_app,
@@ -143,6 +145,6 @@ agent_engine = AgentEngineApp.create(
     memory_service=VertexAiMemoryBankService(
         project=project_id,
         location=gemini_location,
-        agent_engine_id=os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID")
+        agent_engine_id=engine_id
     ),
 )

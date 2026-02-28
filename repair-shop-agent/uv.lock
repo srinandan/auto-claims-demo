@@ -13,7 +13,7 @@ resolution-markers = [
 
 [[package]]
 name = "a2a-sdk"
-version = "0.3.23"
+version = "0.3.24"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "google-api-core" },
@@ -22,9 +22,9 @@ dependencies = [
     { name = "protobuf" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/6a/2fe24e0a85240a651006c12f79bdb37156adc760a96c44bc002ebda77916/a2a_sdk-0.3.23.tar.gz", hash = "sha256:7c46b8572c4633a2b41fced2833e11e62871e8539a5b3c782ba2ba1e33d213c2", size = 255265, upload-time = "2026-02-17T08:34:34.648Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ad/76/cefa956fb2d3911cb91552a1da8ce2dbb339f1759cb475e2982f0ae2332b/a2a_sdk-0.3.24.tar.gz", hash = "sha256:3581e6e8a854cd725808f5732f90b7978e661b6d4e227a4755a8f063a3c1599d", size = 255550, upload-time = "2026-02-20T10:05:43.423Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d4/20/77d119f19ab03449d3e6bc0b1f11296d593dae99775c1d891ab1e290e416/a2a_sdk-0.3.23-py3-none-any.whl", hash = "sha256:8c2f01dffbfdd3509eafc15c4684743e6ae75e69a5df5d6f87be214c948e7530", size = 145689, upload-time = "2026-02-17T08:34:33.263Z" },
+    { url = "https://files.pythonhosted.org/packages/10/6e/cae5f0caea527b39c0abd7204d9416768764573c76649ca03cc345a372be/a2a_sdk-0.3.24-py3-none-any.whl", hash = "sha256:7b248767096bb55311f57deebf6b767349388d94c1b376c60cb8f6b715e053f6", size = 145752, upload-time = "2026-02-20T10:05:41.729Z" },
 ]
 
 [[package]]
@@ -882,7 +882,7 @@ wheels = [
 
 [[package]]
 name = "google-adk"
-version = "1.25.0"
+version = "1.26.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiosqlite" },
@@ -930,18 +930,18 @@ dependencies = [
     { name = "watchdog" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6e/7f/413a6c4daacaf9d7d1415ab83e6be11ed967d8a61238b5ba4271c1d0ab95/google_adk-1.25.0.tar.gz", hash = "sha256:3ec69d0b3071759395cc6c4f5347d6da662aff0727235b2048f6313932d678cf", size = 2220229, upload-time = "2026-02-11T23:22:51.645Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/b2/09b9ee1374b767eaba29e693b0b867fb587a9a131ea159300c9f9fa97d61/google_adk-1.26.0.tar.gz", hash = "sha256:29ec8636025848716246228b595749f785ddc83fb3982052ec92ae871f12fcd8", size = 2250703, upload-time = "2026-02-26T23:39:15.614Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/92/069cfb99d0dde5c5dfb9f7fd2a6fe3bbe0ab988e53f0e738f3aac0333f88/google_adk-1.25.0-py3-none-any.whl", hash = "sha256:2a07ff626e7d2a575a288d58ec6eb10e02cd2203f8d63c7a7698b9af64d73d12", size = 2578255, upload-time = "2026-02-11T23:22:49.862Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/a0/0ca4174ad1ad5f8a81b26e0d67bdff509e18ecc2ae79ca7a87e6f16dd394/google_adk-1.26.0-py3-none-any.whl", hash = "sha256:1a74c6b25f8f4d4098e1a01118b8eefcdf7b3741ba07993093a773bc6775b4d5", size = 2621967, upload-time = "2026-02-26T23:39:13.026Z" },
 ]
 
 [package.optional-dependencies]
 eval = [
     { name = "google-cloud-aiplatform", extra = ["evaluation"] },
+    { name = "jinja2" },
     { name = "pandas", version = "2.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pandas", version = "3.0.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "rouge-score" },
-    { name = "scipy", marker = "python_full_version < '3.11'" },
     { name = "tabulate" },
 ]
 
@@ -3975,10 +3975,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "a2a-sdk", specifier = "~=0.3.22" },
+    { name = "a2a-sdk", specifier = "~=0.3.24" },
     { name = "codespell", marker = "extra == 'lint'", specifier = ">=2.2.0,<3.0.0" },
     { name = "gcsfs", specifier = ">=2024.11.0" },
-    { name = "google-adk", extras = ["bigquery-analytics"], specifier = ">=1.21.0" },
+    { name = "google-adk", extras = ["bigquery-analytics"], specifier = ">=1.26.0" },
     { name = "google-adk", extras = ["eval"], marker = "extra == 'eval'", specifier = ">=1.15.0,<2.0.0" },
     { name = "google-cloud-aiplatform", extras = ["evaluation", "agent-engines"], specifier = ">=1.130.0" },
     { name = "google-cloud-logging", specifier = ">=3.12.0,<4.0.0" },

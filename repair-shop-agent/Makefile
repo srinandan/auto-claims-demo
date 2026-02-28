@@ -4,7 +4,7 @@ REGION ?= us-central1
 _COMMIT_SHA ?= $(shell echo | find app pyproject.toml uv.lock -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 PORT ?= 8083
-REASONING_ENGINE_ID ?= 7826283084579340288
+REASONING_ENGINE_ID ?= 147311468377800704
 
 .PHONY: agent-engine repair-shop-agent
 
