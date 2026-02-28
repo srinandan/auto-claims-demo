@@ -24,8 +24,32 @@ app.set('trust proxy', 1);
 
 const apiBackendUrl = process.env.API_BACKEND_SERVICE_URL || 'http://localhost:8080';
 
+const { GoogleAuth } = require('google-auth-library');
+
 app.use(createProxyMiddleware('/api', {
     target: apiBackendUrl,
+    changeOrigin: true,
+}));
+
+// Proxy for OTLP traces
+const auth = new GoogleAuth({
+    scopes: ['https://www.googleapis.com/auth/cloud-platform'],
+});
+const otlpEndpoint = process.env.OTLP_EXPORTER_URL || 'https://telemetry.googleapis.com';
+
+app.use('/v1/traces', async (req, res, next) => {
+    try {
+        const client = await auth.getClient();
+        const headers = await client.getRequestHeaders();
+        for (const key in headers) {
+            req.headers[key.toLowerCase()] = headers[key];
+        }
+    } catch (err) {
+        console.error('Error fetching Google Auth headers:', err);
+    }
+    next();
+}, createProxyMiddleware({
+    target: otlpEndpoint,
     changeOrigin: true,
 }));
 

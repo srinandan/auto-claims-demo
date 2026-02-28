@@ -37,12 +37,13 @@ export function initTelemetry() {
   }
 
   const exporter = new OTLPTraceExporter({
-    url: url,
+    url: url || '/v1/traces', // Default to relative path which hits our server.js proxy
     headers: headers,
   });
 
   const resource = resourceFromAttributes({
     [ATTR_SERVICE_NAME]: 'auto-claims-frontend',
+    'gcp.project_id': import.meta.env.VITE_PROJECT_ID,
   });
 
   const provider = new WebTracerProvider({
