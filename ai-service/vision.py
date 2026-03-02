@@ -14,7 +14,7 @@
 
 import os
 import json
-from typing import List, Optional
+from typing import List
 from pydantic import BaseModel
 from google import genai
 from google.genai.types import (
