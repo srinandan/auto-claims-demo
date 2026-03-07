@@ -14,6 +14,7 @@ The system consists of several microservices:
 4.  **[Assessor Agent](./assessor-agent/README.md)**: A remote A2A agent that assesses damage severity based on AI analysis.
 5.  **[Processor Agent](./processor-agent/README.md)**: A remote A2A agent that generates repair estimates and makes final claim decisions.
 6.  **[Repair Shop Agent](./repair-shop-agent/README.md)**: A remote A2A agent that handles communication with repair shops to book appointments.
+7.  **[Load Generator](./loadgen/README.md)**: A synthetic API load generation tool built with **Node.js** that injects realistic traffic patterns into the backend for OpenTelemetry analytics.
 
 ## Prerequisites
 
@@ -67,6 +68,14 @@ make local-backend
 cd frontend
 make local-frontend
 # Runs on http://localhost:5173
+```
+
+### 5. Start the Load Generator (Optional)
+If you want to generate synthetic traffic to your APIs:
+```bash
+cd loadgen
+make local-loadgen
+# Begins generating traffic immediately
 ```
 
 ## Contributing
