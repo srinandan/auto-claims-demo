@@ -1,0 +1,39 @@
+{
+  "name": "api-load-generator",
+  "description": "simple server that generates load on a set of API endpoints according to configuration. This is intended to generate synthetic load, so as to produce bona-fide analytics output",
+  "author": {
+    "name": "Sai Saran Vaidyanathan",
+    "email": "ssvaidyanathan@google.com"
+  },
+  "license": "Apache-2.0",
+  "version": "0.2.2",
+  "type": "module",
+  "engines": {
+    "node": ">= v22.16.0",
+    "npm": ">= 10.9.2"
+  },
+  "keywords": [
+    "load generator",
+    "synthetic",
+    "synthetic data"
+  ],
+  "scripts": {
+    "start": "node --import ./tracing.js api-load-generator.js"
+  },
+  "dependencies": {
+    "@google-cloud/opentelemetry-cloud-trace-exporter": "^3.0.0",
+    "@google-cloud/opentelemetry-cloud-trace-propagator": "^0.21.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.71.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.213.0",
+    "@opentelemetry/resources": "^2.6.0",
+    "@opentelemetry/sdk-node": "^0.213.0",
+    "body-parser": "^1.20.2",
+    "cron-parser": "^4.9.0",
+    "express": "^4.19.2",
+    "handlebars": "^4.7.8",
+    "json-stringify-safe": "5.0.1",
+    "jsonpath": "^1.1.1",
+    "strip-json-comments": "^5.0.3"
+  }
+}

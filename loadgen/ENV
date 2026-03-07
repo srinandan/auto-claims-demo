@@ -1,0 +1,3 @@
+export CLOUDRUN_PROJECT_ID=srinandans-next25-demo
+export CLOUDRUN_REGION=us-central1
+export CLOUDRUN_SERVICE_NAME=auto-claims-loadgen

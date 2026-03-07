@@ -1,0 +1,131 @@
+{
+  "id": "auto-claims-demo-template",
+  "initialContext": {
+    "host": "auto-claims-backend-432423772502.us-central1.run.app",
+    "basepath": "/api",
+    "protocols": [
+      [
+        "https",
+        100
+      ]
+    ]
+  },
+  "initialLogLevel": 2,
+  "invocationsPerHour": [
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30,
+    30
+  ],
+  "variationByDayOfWeek": {
+    "Sunday": 1.0,
+    "Monday": 1.0,
+    "Tuesday": 1.0,
+    "Wednesday": 1.0,
+    "Thursday": 1.0,
+    "Friday": 1.0,
+    "Saturday": 1.0
+  },
+  "requests": [
+    {
+      "notes": "1. GET all claims",
+      "imports": {
+        "useragent": "{{weightedRandomSelect useragents}}",
+        "protocol": "{{weightedRandomSelect protocols}}"
+      },
+      "url": "https://auto-claims-backend-432423772502.us-central1.run.app/api/claims",
+      "method": "GET",
+      "headers": {
+        "x-service": "loadgen",
+        "user-agent": "{{useragent}}",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "notes": "2. GET claim by ID",
+      "imports": {
+        "useragent": "{{weightedRandomSelect useragents}}",
+        "protocol": "{{weightedRandomSelect protocols}}"
+      },
+      "url": "https://auto-claims-backend-432423772502.us-central1.run.app/api/claims/1",
+      "method": "GET",
+      "headers": {
+        "x-service": "loadgen",
+        "user-agent": "{{useragent}}",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "notes": "3. GET policies by ID",
+      "imports": {
+        "useragent": "{{weightedRandomSelect useragents}}",
+        "protocol": "{{weightedRandomSelect protocols}}"
+      },
+      "url": "https://auto-claims-backend-432423772502.us-central1.run.app/api/policies/521585",
+      "method": "GET",
+      "headers": {
+        "user-agent": "{{useragent}}",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "notes": "4. POST to process claims",
+      "imports": {
+        "useragent": "{{weightedRandomSelect useragents}}"
+      },
+      "url": "https://auto-claims-ai-service-432423772502.us-central1.run.app/process-claims",
+      "method": "POST",
+      "payload": {
+        "file_uris": [
+          "gs://srinandans-next25-demo-auto-claims/342868/front_bumper_damage.png"
+        ]
+      },
+      "headers": {
+        "x-service": "loadgen",
+        "user-agent": "{{useragent}}",
+        "content-type": "application/json"
+      }
+    },
+    {
+      "notes": "5. POST to book appointment",
+      "imports": {
+        "useragent": "{{weightedRandomSelect useragents}}"
+      },
+      "url": "https://auto-claims-ai-service-432423772502.us-central1.run.app/book-appointment",
+      "method": "POST",
+      "payload": {
+        "session_id": "session-12345",
+        "message": "I would like to book an appointment for tomorrow.",
+        "context": {
+          "preferred_time": "morning",
+          "shop_id": "shop-789"
+        }
+      },
+      "headers": {
+        "x-service": "loadgen",
+        "user-agent": "{{useragent}}",
+        "content-type": "application/json"
+      }
+    }
+  ]
+}
