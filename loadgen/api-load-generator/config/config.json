@@ -93,13 +93,9 @@
       "imports": {
         "useragent": "{{weightedRandomSelect useragents}}"
       },
-      "url": "https://auto-claims-ai-service-432423772502.us-central1.run.app/process-claims",
+      "url": "https://auto-claims-backend-432423772502.us-central1.run.app/api/claims/1/analyze",
       "method": "POST",
-      "payload": {
-        "file_uris": [
-          "gs://srinandans-next25-demo-auto-claims/342868/front_bumper_damage.png"
-        ]
-      },
+      "payload": {},
       "headers": {
         "x-service": "loadgen",
         "user-agent": "{{useragent}}",
@@ -111,15 +107,13 @@
       "imports": {
         "useragent": "{{weightedRandomSelect useragents}}"
       },
-      "url": "https://auto-claims-ai-service-432423772502.us-central1.run.app/book-appointment",
+      "url": "https://auto-claims-backend-432423772502.us-central1.run.app/api/claims/1/book-appointment",
       "method": "POST",
       "payload": {
-        "session_id": "session-12345",
-        "message": "I would like to book an appointment for tomorrow.",
-        "context": {
-          "preferred_time": "morning",
-          "shop_id": "shop-789"
-        }
+        "session_id": "session-123",
+        "message": "I would like to schedule my repair at 10:00 AM on 05/05/2026.",
+        "shop_name": "Bob Auto Body",
+        "customer_name": "John Doe"
       },
       "headers": {
         "x-service": "loadgen",
