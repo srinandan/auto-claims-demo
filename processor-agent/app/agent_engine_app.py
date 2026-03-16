@@ -87,7 +87,7 @@ class AgentEngineApp(A2aAgent):
             agent=app.root_agent,
             # Agent Engine does not support streaming yet
             capabilities=AgentCapabilities(streaming=False),
-            rpc_url=f"https://{gemini_location}-aiplatform.googleapis.com/v1beta1/projects/{project_id}/locations/{gemini_location}/reasoningEngines/{engine_id}/a2a",
+            rpc_url="http://localhost:9999",
             agent_version=os.getenv("AGENT_VERSION", "0.1.0"),
         )
         agent_card = await agent_card_builder.build()
