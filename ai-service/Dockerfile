@@ -22,7 +22,7 @@
 #     gcc \
 #    && rm -rf /var/lib/apt/lists/*
 # --------------------------- USE BASE IMAGE --------------------------------
-FROM us-east4-docker.pkg.dev/srinandans-apphub/auto-claims/auto-claims-ai-service-base:latest
+FROM REPLACE-LOCATION-docker.pkg.dev/REPLACE-PROJECT-ID/auto-claims/auto-claims-ai-service-base:latest
 LABEL org.opencontainers.image.url='https://github.com/srinandan/auto-claims-demo/ai-service' \
     org.opencontainers.image.documentation='https://github.com/srinandan/auto-claims-demo/ai-service' \
     org.opencontainers.image.source='https://github.com/srinandan/auto-claims-demo/ai-service' \
