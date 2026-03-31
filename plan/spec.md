@@ -39,19 +39,19 @@ The project is built on a microservices architecture, with distinct services for
     - Provides endpoints for creating, retrieving, and updating claims.
 
 ### C. AI Service & Agents (Python)
-A collection of specialized AI services, likely built with FastAPI or similar Python web frameworks.
+A collection of specialized AI services, built with FastAPI, uv, and the Google Cloud ADK (A2A protocol).
 
-- **`ai-service`**: The primary AI service that seems to orchestrate multiple agents. It includes:
+- **`ai-service`**: The primary AI service (port 8000) that acts as the entrypoint for AI tasks. It leverages YOLOv11 for specific damage detection, and Vertex AI for generative analysis. It also acts as the orchestrator to call other agents.
     - **`claims_agent.py`**: A core agent for processing the overall claim logic.
-    - **`car_damage_detector.py`**: An agent specialized in analyzing photos to detect and classify vehicle damage.
+    - **`car_damage_detector.py`**: An agent specialized in analyzing photos to detect and classify vehicle damage using YOLOv11 and Vertex AI.
     - **`appointment_agent.py`**: An agent that handles the conversational flow for booking appointments with repair shops.
     - **`repair_shop_agent.py`**: An agent responsible for finding and interacting with repair shops.
-- **`assessor-agent`**: A dedicated agent for performing assessment tasks, likely providing initial damage assessments or estimates.
-- **`processor-agent`**: An agent focused on the "processing" part of a claim, which might involve document processing, fraud checks, or payment logic.
-- **`repair-shop-agent` (standalone)**: A standalone service for repair shop interactions, possibly exposing a more complex API for a partner ecosystem.
+- **`assessor-agent`**: A remote A2A agent (port 8081) for performing assessment tasks, evaluating the severity of vehicle damage based on visual analysis and claim details.
+- **`processor-agent`**: A remote A2A agent (port 8082) focused on generating repair estimates and making final claim decisions based on the initial assessment.
+- **`repair-shop-agent`**: A remote A2A agent (port 8083) standalone service for repair shop interactions, finding suitable repair shops and handling appointment bookings.
 
 ### D. Load Generator
-- **`loadgen`**: A Node.js-based utility for generating synthetic load against the backend API. This is crucial for performance testing and ensuring the system's scalability and reliability under pressure. It is not part of the core production application.
+- **`loadgen`**: A Node.js-based utility for generating synthetic load against the backend API. This is crucial for performance testing, OpenTelemetry traces, and ensuring the system's scalability and reliability under pressure. It is not part of the core production application.
 
 ---
 
@@ -73,11 +73,11 @@ A collection of specialized AI services, likely built with FastAPI or similar Py
 4.  The frontend sends this data to the **Backend**, which creates a new `Claim` record and uploads the photos to GCS.
 
 ### B. Automated Analysis & Estimation
-1.  Upon successful claim creation, the **Backend** triggers the `AnalyzeClaim` process.
+1.  Upon successful claim creation, the **Backend** triggers the `AnalyzeClaim` process (`/api/claims/:id/analyze`).
 2.  It calls the **`ai-service`** (`/process-claims` endpoint), providing the GCS URIs of the uploaded photos.
-3.  The **`car_damage_detector`** agent analyzes each photo, identifies damaged parts, and assesses severity.
-4.  The **`claims_agent`** receives the analysis results and generates a preliminary repair estimate.
-5.  The AI service returns the analysis results and estimate to the Backend, which persists this information in the `AnalysisResult` and `Estimate` tables.
+3.  The **`car_damage_detector`** within `ai-service` analyzes each photo using YOLOv11/VertexAI, identifying damaged parts and assessing severity.
+4.  The `ai-service` orchestrates calls to the **`assessor-agent`** and **`processor-agent`** via the A2A protocol to fully assess the claim and generate a preliminary repair estimate.
+5.  The AI service returns the comprehensive analysis results and estimate to the Backend, which persists this information in the `AnalysisResult` and `Estimate` tables.
 6.  The claim status is updated to "Assessed", and the **Claimant** can now view the results.
 
 ### C. Repair Shop Selection
@@ -171,35 +171,45 @@ Key endpoints exposed by the Go backend service.
 ## 7. Deployment & Execution
 
 ### Prerequisites
-- Go
-- Node.js & npm
-- Python
+- Go (v1.25.8+)
+- Node.js (v18+) & npm
+- Python (v3.11+) and `uv`
 - Docker (for containerized deployment)
 - Access to a Google Cloud project with GCS enabled.
 
 ### Local Development
 Each service can be run locally using commands specified in its `Makefile`.
 
-1.  **AI Service:**
+1.  **Agents (A2A):**
     ```bash
-    cd ai-service
-    # (Follow instructions in its README/Makefile, typically)
-    # python main.py or similar
+    cd assessor-agent && make local-assessor-agent
+    cd processor-agent && make local-processor-agent
+    cd repair-shop-agent && make local-repair-shop-agent
     ```
 
-2.  **Backend:**
+2.  **AI Service:**
+    ```bash
+    cd ai-service
+    make local-ai-service
+    ```
+    *This runs on port 8000.*
+
+3.  **Backend:**
     ```bash
     cd backend
     make local-backend
     ```
     *This runs the Go server on port 8080 by default.*
 
-3.  **Frontend:**
+4.  **Frontend:**
     ```bash
     cd frontend
     make local-frontend
     ```
     *This starts the Vite dev server, typically on port 5173.*
 
-### Containerization
-Each service contains a `Dockerfile` and a `.cloudbuild/deploy.yaml` file, indicating that the intended deployment target is a container-based environment on Google Cloud, such as Cloud Run or GKE. The `Makefile` in each directory also contains a target for building and deploying using Google Cloud Build.
+### Cloud Deployment
+Deploying to Google Cloud involves three phases:
+1. `python3 infra/setup.py` (Foundation Setup)
+2. Deploying each service to Cloud Run / Vertex AI (`gcloud builds submit --config .cloudbuild/deploy.yaml .`)
+3. `python3 infra/setup_lb.py` (Setup Load Balancer)

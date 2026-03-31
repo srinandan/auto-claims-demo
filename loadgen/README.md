@@ -14,7 +14,7 @@ This is the load generator for the Auto Claims Demo, intended to drive synthetic
 ## Prerequisites
 
 -   Node.js (v22.16.0 or later)
--   npm (v10.9.2 or later)
+-   npm
 -   Google Cloud SDK (`gcloud`)
 
 ## Setup & Run

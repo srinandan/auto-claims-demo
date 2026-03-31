@@ -1,11 +1,12 @@
-node_modules
 .git
 .gitignore
-.vscode
-.idea
-.DS_Store
+node_modules/
+dist/
+dist-ssr/
 npm-debug.log
 yarn-error.log
 .env
 .env.*
-ENV
+.vscode/
+.idea/
+.DS_Store
