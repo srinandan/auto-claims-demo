@@ -14,6 +14,11 @@
 
 FROM python:3.12-slim-bookworm
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+LABEL org.opencontainers.image.url='https://github.com/srinandan/auto-claims-demo/ai-service/base' \
+    org.opencontainers.image.documentation='https://github.com/srinandan/auto-claims-demo/ai-service/base' \
+    org.opencontainers.image.source='https://github.com/srinandan/auto-claims-demo/ai-service/base' \
+    org.opencontainers.image.vendor='Google LLC' \
+    org.opencontainers.image.licenses='Apache-2.0'
 
 # Install system dependencies required by OpenCV and Ultralytics
 RUN apt-get update && apt-get install -y \

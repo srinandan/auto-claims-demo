@@ -29,14 +29,14 @@ from fastapi import FastAPI
 from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
 from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
-from google.adk.memory import VertexAiMemoryService
+from google.adk.memory import VertexAiMemoryBankService
 from google.adk.runners import Runner
 from google.adk.sessions import VertexAiSessionService
 from google.cloud import logging as google_cloud_logging
 
 from app.agent import app as adk_app
 from app.app_utils.telemetry import setup_telemetry
-from app.app_utils.typing import Feedback
+from app.app_utils.custom_types import Feedback
 
 PORT = os.getenv("PORT", 8081)
 
@@ -57,8 +57,8 @@ artifact_service = (
 runner = Runner(
     app=adk_app,
     artifact_service=artifact_service,
-    session_service=VertexAiSessionService(project_id=project_id, location=location),
-    memory_service=VertexAiMemoryService(project_id=project_id, location=location),
+    session_service=VertexAiSessionService(project=project_id, location=location, agent_engine_id=os.environ.get("REASONING_ENGINE_ID")),
+    memory_service=VertexAiMemoryBankService(project=project_id, location=location, agent_engine_id=os.environ.get("REASONING_ENGINE_ID")),
 )
 
 request_handler = DefaultRequestHandler(

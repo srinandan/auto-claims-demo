@@ -25,3 +25,6 @@ loadgen:
 	export PROJECT_ID=${PROJECT_ID} ;\
 	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
 	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
+
+clean:
+	gcloud run services delete auto-claims-$$(basename $$PWD) --region=${REGION} --project=${PROJECT_ID} --quiet

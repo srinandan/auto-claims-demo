@@ -1,0 +1,25 @@
+# This file tells the gcloud CLI which files to ignore when deploying.
+# For more information, see: https://cloud.google.com/sdk/gcloud/reference/topic/gcloudignore
+
+# Go build artifacts
+*.test
+*.out
+_obj/
+_pkg/
+
+# Vendor directory (if present)
+vendor/
+
+# IDE and editor configuration files
+.idea/
+.vscode/
+.DS_Store
+
+# Git directory and ignore files
+.git/
+.gitignore
+
+# Local development tools and documentation
+Makefile
+README.md
+*.md

@@ -1,6 +1,11 @@
 # Auto Claims Application
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CI](https://github.com/srinandan/auto-claims-demo/actions/workflows/ci.yaml/badge.svg)](https://github.com/srinandan/auto-claims-demo/actions/workflows/ci.yaml)
+[![License](https://img.shields.io/github/license/srinandan/auto-claims-demo)](./LICENSE.txt)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/srinandan/auto-claims-demo?filename=backend/go.mod)](./backend/go.mod)
+[![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](./ai-service/pyproject.toml)
+[![Node Version](https://img.shields.io/badge/node-20+-green.svg)](./frontend/package.json)
+[![CodeQL](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml/badge.svg)](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml)
 
 ![Architecture Diagram](./infra/infra.png)
 
@@ -76,6 +81,31 @@ If you want to generate synthetic traffic to your APIs:
 cd loadgen
 make local-loadgen
 # Begins generating traffic immediately
+```
+
+## Cloud Deployment
+
+Deploying this application to Google Cloud is split into three distinct phases to ensure a clean user experience:
+
+### Phase 1: Foundation Setup
+First, provision the core infrastructure (APIs, Service Accounts, GCS Buckets, Artifact Registry, BigQuery, and Secret Manager) by running the foundation script.
+```bash
+python3 infra/setup.py
+```
+
+### Phase 2: Deploy Services
+Next, you must build and deploy each of the microservices to Cloud Run and Vertex AI Reasoning Engine. Navigate to each directory and run the deployment process (e.g., using Cloud Build):
+```bash
+# Example for backend
+cd backend
+gcloud builds submit --config .cloudbuild/deploy.yaml .
+# Repeat for frontend, ai-service, assessor-agent, processor-agent, and repair-shop-agent.
+```
+
+### Phase 3: Setup Load Balancer
+Once all services are deployed natively, execute the load balancer script to tie the frontend and backend together under a single Global Application Load Balancer with a managed SSL certificate.
+```bash
+python3 infra/setup_lb.py
 ```
 
 ## Contributing

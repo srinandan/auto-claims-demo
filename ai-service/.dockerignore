@@ -23,3 +23,5 @@ coverage.xml
 tests/
 .cloudbuild/
 .DS_Store
+tests
+base

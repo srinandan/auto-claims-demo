@@ -61,15 +61,16 @@ steps:
       - 'VITE_API_BASE_URL="https://autoclaims.endpoints.${PROJECT_ID}.cloud.goog,API_BACKEND_SERVICE_URL=https://auto-claims-backend-${PROJECT_NUMBER}.${_REGION}.run.app'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
-      - "--max-instances"
-      - "1"
+      - "--max=1"
+      - "--min=1"
+      - "--no-iap"
       - "--allow-unauthenticated"
       - "--timeout"
       - "300"
       - "--cpu-boost"
       - "--session-affinity"
       - "--ingress"
-      - "internal-and-cloud-load-balancing"
+      - "all"
 
 substitutions:
   _STAGING_PROJECT_ID: ${PROJECT_ID}
@@ -82,6 +83,8 @@ images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}
 
 options:
+  pool:
+    name: "projects/$PROJECT_ID/locations/$LOCATION/workerPools/auto-claims"
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: ALLOW_LOOSE
   requestedVerifyOption: VERIFIED

@@ -72,15 +72,16 @@ steps:
       - 'GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,BQ_ANALYTICS_GCS_BUCKET=${PROJECT_ID},BQ_ANALYTICS_CONNECTION_ID=${PROJECT_ID},LOGS_BUCKET_NAME=${PROJECT_ID},APP_URL=https://${_CONTAINER_NAME}-${PROJECT_NUMBER}.${_REGION}.run.app'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
-      - "--max-instances" 
-      - "1"
+      - "--max=1"
+      - "--min=1"
+      - "--no-iap"
       - "--allow-unauthenticated"
       - "--timeout"
       - "300"
       - "--cpu-boost"
       - "--session-affinity"
       - "--ingress"
-      - "internal-and-cloud-load-balancing"
+      - "all"
       - "--labels=appid=auto-claims"
 
 substitutions:
@@ -94,6 +95,8 @@ images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest
 
 options:
+  pool:
+    name: "projects/$PROJECT_ID/locations/$LOCATION/workerPools/auto-claims"
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: ALLOW_LOOSE
   requestedVerifyOption: VERIFIED

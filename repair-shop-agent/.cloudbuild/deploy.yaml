@@ -58,5 +58,7 @@ substitutions:
 
 logsBucket: gs://${PROJECT_ID}-repair-shop-agent-logs/build-logs
 options:
+  pool:
+    name: "projects/$PROJECT_ID/locations/$LOCATION/workerPools/auto-claims"
   substitutionOption: ALLOW_LOOSE
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET

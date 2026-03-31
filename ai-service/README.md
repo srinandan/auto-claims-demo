@@ -43,6 +43,21 @@ In Mock Mode:
 
 ## Setup & Run
 
+### Cloud Deployment
+
+To deploy this service to Cloud Run, you must first build the base image which contains the heavy machine learning dependencies.
+
+1. Build the base image by running:
+   ```bash
+   make base
+   ```
+2. Once the base image is built, identify its image URI from the Artifact Registry.
+3. Update the `Dockerfile`'s `FROM` instruction to point to this new base image URI.
+4. Deploy the actual service by running:
+   ```bash
+   make ai-service
+   ```
+
 ### Run Locally
 
 ```bash
