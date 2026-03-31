@@ -32,25 +32,44 @@ factory = None
 
 class GoogleAuth(httpx.Auth):
     def __init__(self):
-        try:
-            self.credentials, _ = default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
-            self.request = Request()
-        except Exception as e:
-            print(f"Error getting credentials: {e}")
-            print("Please ensure you have authenticated with 'gcloud auth application-default login'.")
-            self.credentials = None
-            self.request = None
+        self._credentials = None
+        self._request = None
+
+    def _get_token(self):
+        import google.auth
+        from google.auth.transport.requests import Request
+        if not self._credentials:
+            self._credentials, _ = google.auth.default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
+            self._request = Request()
+        
+        if not self._credentials.valid:
+            try:
+                self._credentials.refresh(self._request)
+            except Exception as e:
+                print(f"Error fetching/refreshing credentials: {e}")
+        return self._credentials.token
 
     def auth_flow(self, request):
-        if self.credentials:
-            if not self.credentials.valid:
-                try:
-                    self.credentials.refresh(self.request)
-                except Exception as e:
-                    print(f"Error refreshing credentials: {e}")
-            if self.credentials.token:
-                request.headers["Authorization"] = f"Bearer {self.credentials.token}"
-        yield request
+        try:
+            token = self._get_token()
+            if token:
+                request.headers["Authorization"] = f"Bearer {token}"
+        except Exception as e:
+            print(f"GoogleAuth error: {e}")
+
+        response = yield request
+
+        if response.status_code == 401:
+            print("Received 401 UNAUTHENTICATED. Attempting to force refresh credentials and retry...")
+            try:
+                if self._credentials and self._request:
+                    self._credentials.refresh(self._request)
+                token = self._get_token()
+                if token:
+                    request.headers["Authorization"] = f"Bearer {token}"
+                    yield request
+            except Exception as e:
+                print(f"Error on retry token fetch: {e}")
 
 ASSESSOR_AGENT_URL = os.getenv("ASSESSOR_AGENT_URL")
 PROCESSOR_AGENT_URL = os.getenv("PROCESSOR_AGENT_URL")
@@ -74,6 +93,7 @@ if AGENT_ENGINE_ENABLED == "true":
             # Configure HTTP client with authentication            
             httpx_client=httpx.AsyncClient(
                 auth=GoogleAuth(),
+                timeout=120,
             ),
         )
     )
