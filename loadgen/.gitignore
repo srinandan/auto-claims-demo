@@ -27,3 +27,4 @@ dist-ssr
 .env
 .env.*
 ENV
+deployment_metadata.json
