@@ -15,39 +15,29 @@
 -->
 
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <nav class="bg-teal-600 text-white p-4 shadow-md">
-      <div class="container mx-auto flex justify-between items-center">
-        <router-link to="/" class="font-bold text-xl flex items-center gap-2">
-          <img src="/cymbal-logo.svg" alt="Cymbal Logo" class="h-8 w-8" />
-          <span>Cymbal Insurance</span>
-        </router-link>
-
-        <div v-if="user" class="flex items-center gap-4">
-          <span class="text-sm font-medium opacity-90">
-            Welcome, {{ user.first_name }} {{ user.last_name }}
-          </span>
-          <button
-            @click="logout"
-            class="bg-teal-700 hover:bg-teal-800 text-white px-3 py-1 rounded text-sm transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
-    </nav>
-    <main class="container mx-auto p-4">
+  <div class="min-h-screen bg-surface text-on-surface antialiased">
+    <template v-if="user">
+      <TopNavBar />
+      <SideNavBar />
+      <main class="lg:ml-64 pt-24 min-h-screen">
+        <router-view />
+      </main>
+      <Footer />
+    </template>
+    <template v-else>
       <router-view />
-    </main>
+    </template>
   </div>
 </template>
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
+import TopNavBar from './components/layout/TopNavBar.vue'
+import SideNavBar from './components/layout/SideNavBar.vue'
+import Footer from './components/layout/Footer.vue'
 
 const route = useRoute()
-const router = useRouter()
 const user = ref(null)
 
 const checkUser = () => {
@@ -70,10 +60,4 @@ watch(() => route.path, () => {
 onMounted(() => {
   checkUser()
 })
-
-const logout = () => {
-  localStorage.removeItem('user')
-  user.value = null
-  router.push('/')
-}
 </script>
