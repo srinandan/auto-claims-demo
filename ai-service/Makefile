@@ -9,7 +9,7 @@ REPAIR_SHOP_AGENT_URL ?= http://localhost:8083
 PORT ?= 8000
 AGENT_ENGINE_ENABLED ?= false
 
-.PHONY: local base deploy
+.PHONY: local deploy
 
 local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
@@ -32,13 +32,6 @@ deploy:
 	export PROJECT_ID=${PROJECT_ID} ;\
 	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
 	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
-
-base:
-	export _COMMIT_SHA=${_COMMIT_SHA} ;\
-	export REGION=${REGION} ;\
-	export PROJECT_ID=${PROJECT_ID} ;\
-	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
-	gcloud builds submit base/ --config=base/base.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
 
 clean:
 	gcloud run services delete auto-claims-$$(basename $$PWD) --region=${REGION} --project=${PROJECT_ID} --quiet

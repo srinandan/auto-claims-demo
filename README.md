@@ -42,11 +42,6 @@ This will:
 - Create a service account `auto-claims-sa` with the required IAM roles.
 - Create a GCS bucket, Artifact Registry repository, Secret Manager secrets, BigQuery dataset, and Cloud Build worker pool.
 
-Once all services are deployed natively, you can optionally execute the load balancer script to tie the frontend and backend together under a single Global Application Load Balancer with a managed SSL certificate.
-```bash
-python3 infra/setup_lb.py
-```
-
 ### 1. Installation
 Install dependencies for all components according to their respective READMEs.
 
@@ -68,7 +63,13 @@ make deploy
 ```
 This command leverages the root Makefile to build and submit deployments for the frontend, backend, AI service, and all agents.
 
-### 3. Individual Component Setup
+### 4. Load Balancer Setup (Optional)
+Once all services are deployed natively, you can optionally execute the load balancer script to tie the frontend and backend together under a single Global Application Load Balancer with a managed SSL certificate.
+```bash
+python3 infra/setup_lb.py
+```
+
+### 5. Individual Component Setup
 
 For detailed setup, configuration, and individual execution of each component, refer to their respective READMEs:
 - **[Frontend](./frontend/README.md)**
