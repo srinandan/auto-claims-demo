@@ -1665,8 +1665,6 @@ gcloud eventarc triggers create my-trigger \
     --event-filters="type=google.cloud.storage.object.v1.finalized"
 ```
 
-**Production tips:** Use semaphores to limit concurrent Gemini calls (avoid 429s), set Cloud Run `--max-instances`, and return per-row errors instead of failing entire batches. See [reference implementation](https://github.com/richardhe-fundamenta/practical-gcp-examples/blob/main/bq-remote-function-agent/customer-advisor/app/fast_api_app.py) for production patterns.
-
 ---
 
 ## Operational Guidelines for Coding Agents
