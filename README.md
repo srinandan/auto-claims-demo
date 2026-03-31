@@ -7,12 +7,12 @@
 [![Node Version](https://img.shields.io/badge/node-20+-green.svg)](./frontend/package.json)
 [![CodeQL](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml/badge.svg)](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml)
 
-![Architecture Diagram](./infra/infra.png)
-
 This project is an **Auto Claims Processing Application** that streamlines the claims process by allowing users to submit claims and automatically analyzing vehicle images for damage using an AI service.
 
-The system consists of several microservices:
+## Architecture
+![Architecture Diagram](./infra/infra.png)
 
+This is a monorepo containing:
 1.  **[Frontend](./frontend/README.md)**: A responsive web interface built with **Vue 3**, **Vite**, and **Tailwind CSS v4**.
 2.  **[Backend](./backend/README.md)**: A robust REST API built with **Go (Gin)** and **SQLite**.
 3.  **[AI Service](./ai-service/README.md)**: A specialized service built with **Python (FastAPI)** that uses **Vertex AI** and **YOLOv11** to analyze images and orchestrate the claims process.
@@ -24,89 +24,64 @@ The system consists of several microservices:
 ## Prerequisites
 
 Ensure you have the following installed:
-
 *   [Node.js](https://nodejs.org/) (v18+)
 *   [Go](https://go.dev/) (v1.25.8+)
 *   [Python](https://www.python.org/) (v3.11+) and [uv](https://docs.astral.sh/uv/)
 *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud`)
+*   Google Cloud Project with Billing enabled
 
-## Quick Start
+### 1. Automated Infrastructure Setup
+We provide a script `infra/setup.py` to automate the one-time setup of GCP APIs, Service Accounts, and other fundamental cloud infrastructure required by the application.
 
-Detailed instructions for each service are available in their respective directories, but here is a quick summary to get everything running locally.
-
-### 1. Start the Agents
-
-In separate terminals:
-```bash
-# Terminal 1: Assessor Agent
-cd assessor-agent
-make local-assessor-agent
-# Runs on http://localhost:8081
-
-# Terminal 2: Processor Agent
-cd processor-agent
-make local-processor-agent
-# Runs on http://localhost:8082
-
-# Terminal 3: Repair Shop Agent
-cd repair-shop-agent
-make local-repair-shop-agent
-# Runs on http://localhost:8083
-```
-
-### 2. Start the AI Service
-```bash
-cd ai-service
-make local-ai-service
-# Runs on http://localhost:8000
-```
-
-### 3. Start the Backend
-```bash
-cd backend
-make local-backend
-# Runs on http://localhost:8080
-```
-
-### 4. Start the Frontend
-```bash
-cd frontend
-make local-frontend
-# Runs on http://localhost:5173
-```
-
-### 5. Start the Load Generator (Optional)
-If you want to generate synthetic traffic to your APIs:
-```bash
-cd loadgen
-make local-loadgen
-# Begins generating traffic immediately
-```
-
-## Cloud Deployment
-
-Deploying this application to Google Cloud is split into three distinct phases to ensure a clean user experience:
-
-### Phase 1: Foundation Setup
-First, provision the core infrastructure (APIs, Service Accounts, GCS Buckets, Artifact Registry, BigQuery, and Secret Manager) by running the foundation script.
 ```bash
 python3 infra/setup.py
 ```
 
-### Phase 2: Deploy Services
-Next, you must build and deploy each of the microservices to Cloud Run and Vertex AI Reasoning Engine. Navigate to each directory and run the deployment process (e.g., using Cloud Build):
-```bash
-# Example for backend
-cd backend
-gcloud builds submit --config .cloudbuild/deploy.yaml .
-# Repeat for frontend, ai-service, assessor-agent, processor-agent, and repair-shop-agent.
-```
+This will:
+- Enable necessary APIs (Cloud Run, Vertex AI, Artifact Registry, Secret Manager, BigQuery, etc.).
+- Create a service account `auto-claims-sa` with the required IAM roles.
+- Create a GCS bucket, Artifact Registry repository, Secret Manager secrets, BigQuery dataset, and Cloud Build worker pool.
 
-### Phase 3: Setup Load Balancer
-Once all services are deployed natively, execute the load balancer script to tie the frontend and backend together under a single Global Application Load Balancer with a managed SSL certificate.
+Once all services are deployed natively, you can optionally execute the load balancer script to tie the frontend and backend together under a single Global Application Load Balancer with a managed SSL certificate.
 ```bash
 python3 infra/setup_lb.py
 ```
+
+### 1. Installation
+Install dependencies for all components according to their respective READMEs.
+
+### 2. Execution
+Start all microservices locally with a single command:
+```bash
+make local-all
+```
+
+To stop all locally running microservices, simply run:
+```bash
+make local-stop
+```
+
+### 3. Deployment
+To deploy all components to Google Cloud Run natively from the root directory:
+```bash
+make deploy
+```
+This command leverages the root Makefile to build and submit deployments for the frontend, backend, AI service, and all agents.
+
+### 3. Individual Component Setup
+
+For detailed setup, configuration, and individual execution of each component, refer to their respective READMEs:
+- **[Frontend](./frontend/README.md)**
+- **[Backend](./backend/README.md)**
+- **[AI Service](./ai-service/README.md)**
+- **[Assessor Agent](./assessor-agent/README.md)**
+- **[Processor Agent](./processor-agent/README.md)**
+- **[Repair Shop Agent](./repair-shop-agent/README.md)**
+- **[Load Generator](./loadgen/README.md)**
+
+## Built With
+
+This application was built with the assistance of [Stitch](https://stitch.withgoogle.com/) and [Jules](https://jules.google.com).
 
 ## Contributing
 

@@ -7,9 +7,9 @@ OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 OTEL_SERVICE_NAME=auto-claims-loadgen
 
 
-.PHONY: loadgen local-loadgen
+.PHONY: loadgen local
 
-local-loadgen:
+local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export GOOGLE_CLOUD_PROJECT=${PROJECT_ID} ;\
 	export GOOGLE_CLOUD_PROJECT_NUMBER=${PROJECT_NUMBER} ;\
