@@ -18,6 +18,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import ClaimDetail from '../views/ClaimDetail.vue'
 import Login from '../views/Login.vue'
+import NewClaim from '../views/NewClaim.vue'
+import Documents from '../views/Documents.vue'
+import Settings from '../views/Settings.vue'
 
 const routes = [
   {
@@ -35,6 +38,24 @@ const routes = [
     path: '/claims/:id',
     name: 'ClaimDetail',
     component: ClaimDetail,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/new-claim',
+    name: 'NewClaim',
+    component: NewClaim,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/documents',
+    name: 'Documents',
+    component: Documents,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: Settings,
     meta: { requiresAuth: true }
   }
 ]
