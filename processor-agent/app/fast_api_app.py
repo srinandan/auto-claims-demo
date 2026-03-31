@@ -36,7 +36,7 @@ from google.cloud import logging as google_cloud_logging
 
 from app.agent import app as adk_app
 from app.app_utils.telemetry import setup_telemetry
-from app.app_utils.typing import Feedback
+from app.app_utils.custom_types import Feedback
 
 PORT = os.environ.get("PORT", 8082)
 
@@ -58,8 +58,8 @@ location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 runner = Runner(
     app=adk_app,
     artifact_service=artifact_service,
-    session_service=VertexAiSessionService(project=project_id, location=location),
-    memory_service=VertexAiMemoryBankService(project=project_id, location=location),
+    session_service=VertexAiSessionService(project=project_id, location=location, agent_engine_id=os.environ.get("REASONING_ENGINE_ID")),
+    memory_service=VertexAiMemoryBankService(project=project_id, location=location, agent_engine_id=os.environ.get("REASONING_ENGINE_ID")),
 )
 
 request_handler = DefaultRequestHandler(

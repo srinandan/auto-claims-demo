@@ -34,7 +34,7 @@ from vertexai.preview.reasoning_engines import A2aAgent
 
 from app.agent import app as adk_app
 from app.app_utils.telemetry import setup_telemetry
-from app.app_utils.typing import Feedback
+from app.app_utils.custom_types import Feedback
 
 # Load environment variables from .env file at runtime
 load_dotenv()
