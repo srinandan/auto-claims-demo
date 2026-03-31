@@ -116,3 +116,4 @@ backend/claims.db
 ai-service/uv.lock
 frontend/package-lock.json
 .DS_Store
+deployment_metadata.json

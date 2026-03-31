@@ -83,4 +83,4 @@ sessions.db
 # vertex ai runtime
 deployment_metadata.json
 .requirements.txt
-sessionid.txt
+sessionid.txtdeployment_metadata.json

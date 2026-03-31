@@ -27,11 +27,17 @@ local:
 	uv run main.py
 
 deploy:
+	sed -i 's/REPLACE-PROJECT-ID/${PROJECT_ID}/g' Dockerfile
+	sed -i 's/REPLACE-LOCATION/${REGION}/g' Dockerfile
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${REGION} ;\
 	export PROJECT_ID=${PROJECT_ID} ;\
 	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
-	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
+	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION} ; \
+	RESULT=$$? ; \
+	sed -i 's/${PROJECT_ID}/REPLACE-PROJECT-ID/g' Dockerfile ; \
+	sed -i 's/${REGION}/REPLACE-LOCATION/g' Dockerfile ; \
+	exit $$RESULT
 
 clean:
 	gcloud run services delete auto-claims-$$(basename $$PWD) --region=${REGION} --project=${PROJECT_ID} --quiet

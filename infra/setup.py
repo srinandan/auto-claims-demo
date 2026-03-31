@@ -68,6 +68,7 @@ def setup_infrastructure():
         "bigquery.googleapis.com",
         "secretmanager.googleapis.com",
         "compute.googleapis.com",
+        "apphub.googleapis.com",
     ]
     print(f"Enabling {len(apis)} APIs...")
     api_list = ' '.join(apis)
