@@ -14,6 +14,11 @@
 
 # Official Node.js runtime as a parent image
 FROM node:22-alpine
+LABEL org.opencontainers.image.url='https://github.com/srinandan/auto-claims-demo/frontend' \
+    org.opencontainers.image.documentation='https://github.com/srinandan/auto-claims-demo/frontend' \
+    org.opencontainers.image.source='https://github.com/srinandan/auto-claims-demo/frontend' \
+    org.opencontainers.image.vendor='Google LLC' \
+    org.opencontainers.image.licenses='Apache-2.0'
 
 # working directory in the container
 WORKDIR /app

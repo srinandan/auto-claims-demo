@@ -1,6 +1,11 @@
 # Auto Claims Application
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![CI](https://github.com/srinandan/auto-claims-demo/actions/workflows/ci.yaml/badge.svg)](https://github.com/srinandan/auto-claims-demo/actions/workflows/ci.yaml)
+[![License](https://img.shields.io/github/license/srinandan/auto-claims-demo)](./LICENSE.txt)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/srinandan/auto-claims-demo?filename=backend/go.mod)](./backend/go.mod)
+[![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](./ai-service/pyproject.toml)
+[![Node Version](https://img.shields.io/badge/node-20+-green.svg)](./frontend/package.json)
+[![CodeQL](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml/badge.svg)](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml)
 
 ![Architecture Diagram](./infra/infra.png)
 
