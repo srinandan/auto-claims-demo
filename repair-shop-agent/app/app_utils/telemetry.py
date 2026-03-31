@@ -60,7 +60,6 @@ def setup_telemetry() -> str | None:
         enable_cloud_tracing=True,
         enable_cloud_metrics=False,
         enable_cloud_logging=True,
-        google_auth=(credentials, project_id),
     )
     otel_resource = get_gcp_resource(project_id)
     maybe_set_otel_providers(
