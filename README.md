@@ -78,6 +78,31 @@ make local-loadgen
 # Begins generating traffic immediately
 ```
 
+## Cloud Deployment
+
+Deploying this application to Google Cloud is split into three distinct phases to ensure a clean user experience:
+
+### Phase 1: Foundation Setup
+First, provision the core infrastructure (APIs, Service Accounts, GCS Buckets, Artifact Registry, BigQuery, and Secret Manager) by running the foundation script.
+```bash
+python3 infra/setup.py
+```
+
+### Phase 2: Deploy Services
+Next, you must build and deploy each of the microservices to Cloud Run and Vertex AI Reasoning Engine. Navigate to each directory and run the deployment process (e.g., using Cloud Build):
+```bash
+# Example for backend
+cd backend
+gcloud builds submit --config .cloudbuild/deploy.yaml .
+# Repeat for frontend, ai-service, assessor-agent, processor-agent, and repair-shop-agent.
+```
+
+### Phase 3: Setup Load Balancer
+Once all services are deployed natively, execute the load balancer script to tie the frontend and backend together under a single Global Application Load Balancer with a managed SSL certificate.
+```bash
+python3 infra/setup_lb.py
+```
+
 ## Contributing
 
 Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute to this project.

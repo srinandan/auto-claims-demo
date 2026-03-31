@@ -79,6 +79,8 @@ images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}
 
 options:
+  pool:
+    name: "projects/$PROJECT_ID/locations/$LOCATION/workerPools/auto-claims"
   logging: CLOUD_LOGGING_ONLY
   substitutionOption: ALLOW_LOOSE
   requestedVerifyOption: VERIFIED

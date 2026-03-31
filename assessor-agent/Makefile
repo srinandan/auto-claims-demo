@@ -1,21 +1,14 @@
 PROJECT_ID ?= $(shell gcloud config get-value project)
 PROJECT_NUMBER ?= $(shell gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-REGION ?= us-central1
+REGION ?= $(shell gcloud config get-value compute/region)
 _COMMIT_SHA ?= $(shell echo | find app pyproject.toml uv.lock -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 PORT ?= 8081
 REASONING_ENGINE_ID ?= 5137862805457731584
 
-.PHONY: assessor-agent local-assessor-agent agent-engine
+.PHONY: local deploy
 
-assessor-agent:
-	export _COMMIT_SHA=${_COMMIT_SHA} ;\
-	export REGION=${REGION} ;\
-	export PROJECT_ID=${PROJECT_ID} ;\
-	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
-	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
-
-local-assessor-agent:
+local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${REGION} ;\
 	export PROJECT_ID=${PROJECT_ID} ;\
@@ -35,7 +28,7 @@ lint:
 	uv run ruff format .
 	uv run mypy .
 
-agent-engine:
+deploy:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${REGION} ;\
 	export PROJECT_ID=${PROJECT_ID} ;\
@@ -52,6 +45,8 @@ agent-engine:
 		--source-packages=./app \
 		--entrypoint-module=app.agent_engine_app \
 		--entrypoint-object=agent_engine \
+		--location=${REGION} \
 		--agent-identity \
 		--set-env-vars=REASONING_ENGINE_ID=${REASONING_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true \
 		--requirements-file=app/app_utils/.requirements.txt
+

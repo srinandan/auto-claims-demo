@@ -1,0 +1,21 @@
+# Ignore Go build artifacts and development files
+*.test
+*.out
+_obj/
+_pkg/
+vendor/
+
+# Ignore development tools and documentation
+Makefile
+README.md
+*.md
+
+# Ignore version control and IDE files
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Ignore test files if not needed in the final image
+tests/

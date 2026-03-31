@@ -1,6 +1,6 @@
 PROJECT_ID ?= $(shell gcloud config get-value project)
 PROJECT_NUMBER ?= $(shell gcloud projects describe ${PROJECT_ID} --format="value(projectNumber)")
-REGION ?= us-central1
+REGION ?= $(shell gcloud config get-value compute/region)
 BUCKET_NAME ?= $(shell echo ${PROJECT_ID}-auto-claims)
 _COMMIT_SHA ?= $(shell echo | find uv.lock *.py -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 ASSESSOR_AGENT_URL ?= http://localhost:8081
@@ -9,9 +9,9 @@ REPAIR_SHOP_AGENT_URL ?= http://localhost:8083
 PORT ?= 8000
 AGENT_ENGINE_ENABLED ?= false
 
-.PHONY: local-ai-service
+.PHONY: local base deploy
 
-local-ai-service:
+local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export GOOGLE_CLOUD_PROJECT=${PROJECT_ID} ;\
 	export GOOGLE_CLOUD_PROJECT_NUMBER=${PROJECT_NUMBER} ;\
@@ -26,9 +26,19 @@ local-ai-service:
 	export AGENT_ENGINE_ENABLED=${AGENT_ENGINE_ENABLED} ;\
 	uv run main.py
 
-ai-service:
+deploy:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${REGION} ;\
 	export PROJECT_ID=${PROJECT_ID} ;\
 	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
 	gcloud builds submit --config=.cloudbuild/deploy.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
+
+base:
+	export _COMMIT_SHA=${_COMMIT_SHA} ;\
+	export REGION=${REGION} ;\
+	export PROJECT_ID=${PROJECT_ID} ;\
+	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
+	gcloud builds submit base/ --config=base/base.yaml --region=${REGION} --substitutions=_COMMIT_SHA=${_COMMIT_SHA},_REGION=${REGION}
+
+clean:
+	gcloud run services delete auto-claims-$$(basename $$PWD) --region=${REGION} --project=${PROJECT_ID} --quiet

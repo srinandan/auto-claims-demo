@@ -22,7 +22,7 @@
 #     gcc \
 #    && rm -rf /var/lib/apt/lists/*
 # --------------------------- USE BASE IMAGE --------------------------------
-FROM us-central1-docker.pkg.dev/srinandans-next25-demo/auto-claims/auto-claims-ai-service-base:latest
+FROM us-central1-docker.pkg.dev/srinandans-apphub/auto-claims/auto-claims-ai-service-base:latest
 
 WORKDIR /code
 
