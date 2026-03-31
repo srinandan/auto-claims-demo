@@ -16,6 +16,7 @@ package telemetry
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -57,8 +58,11 @@ func InitTelemetry(ctx context.Context, projectID, serviceName string) (func(con
 			attribute.String("gcp.project_id", projectID),
 		),
 	)
-	if err != nil {
+	if err != nil && !errors.Is(err, resource.ErrPartialResource) &&
+		!errors.Is(err, resource.ErrSchemaURLConflict) {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
+	} else if err != nil {
+		slog.WarnContext(ctx, "partial resource detected; some attributes may be missing", "error", err)
 	}
 
 	traceExporter, err := otlptracehttp.New(ctx,
