@@ -167,6 +167,14 @@ def setup_infrastructure():
     else:
         print(f"Cloud Build worker pool {pool_name} already exists.")
 
+    # 9. Create Base Docker Images
+    print("\n--- Creating Base Docker Images ---")
+    run_command("make base")
+    print("\n==================================================================================")
+    print("IMPORTANT: Don't forget to update the base image path in ai-service/Dockerfile")
+    print("to use the correct project ID before running 'make ai-service'!")
+    print("==================================================================================\n")
+
     print("\nInfrastructure setup script completed successfully.")
 
 if __name__ == "__main__":
