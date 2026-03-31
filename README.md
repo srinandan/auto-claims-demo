@@ -3,7 +3,7 @@
 [![CI](https://github.com/srinandan/auto-claims-demo/actions/workflows/ci.yaml/badge.svg)](https://github.com/srinandan/auto-claims-demo/actions/workflows/ci.yaml)
 [![License](https://img.shields.io/github/license/srinandan/auto-claims-demo)](./LICENSE.txt)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/srinandan/auto-claims-demo?filename=backend/go.mod)](./backend/go.mod)
-[![Python Version](https://img.shields.io/badge/python-3.12+-blue.svg)](./ai-service/pyproject.toml)
+[![Python Version](https://img.shields.io/badge/python-3.11+-blue.svg)](./ai-service/pyproject.toml)
 [![Node Version](https://img.shields.io/badge/node-20+-green.svg)](./frontend/package.json)
 [![CodeQL](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml/badge.svg)](https://github.com/srinandan/auto-claims-demo/actions/workflows/codeql.yml)
 
@@ -26,8 +26,8 @@ The system consists of several microservices:
 Ensure you have the following installed:
 
 *   [Node.js](https://nodejs.org/) (v18+)
-*   [Go](https://go.dev/) (v1.23+)
-*   [Python](https://www.python.org/) (v3.10+) and [uv](https://docs.astral.sh/uv/)
+*   [Go](https://go.dev/) (v1.25.8+)
+*   [Python](https://www.python.org/) (v3.11+) and [uv](https://docs.astral.sh/uv/)
 *   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud`)
 
 ## Quick Start

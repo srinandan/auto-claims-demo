@@ -13,7 +13,7 @@ This is the frontend application for the Auto Claims Demo, providing an interfac
 
 ## Prerequisites
 
--   Node.js (v18 or later)
+-   Node.js (v22 or later)
 -   npm
 
 ## Setup & Run

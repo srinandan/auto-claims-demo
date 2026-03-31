@@ -6,14 +6,14 @@ This is the backend service for the Auto Claims Demo, built with **Go** and **Gi
 
 ## Tech Stack
 
--   **Language**: [Go](https://go.dev/) (v1.23+)
+-   **Language**: [Go](https://go.dev/) (v1.25.8+)
 -   **Framework**: [Gin](https://gin-gonic.com/)
 -   **Database**: [SQLite](https://www.sqlite.org/index.html) (via [GORM](https://gorm.io/))
 -   **ORM**: GORM
 
 ## Prerequisites
 
--   Go (v1.23 or later)
+-   Go (v1.25.8 or later)
 -   Google Cloud SDK (`gcloud`) - for authentication if using GCP features
 
 ## Setup & Run

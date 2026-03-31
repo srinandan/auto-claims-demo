@@ -1,0 +1,55 @@
+# Binaries
+backend
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries, profiling data
+*.test
+*.out
+*.prof
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+_testmain.go
+*.cov
+*.coverprofile
+
+# Compiled Object files
+*.o
+*.a
+*.obj
+*.lib
+
+# Architecture specific extensions/prefixes
+*.[568vq]
+[568vq].out
+*.cgo1.go
+*.cgo2.c
+_cgo_defun.c
+_cgo_gotypes.go
+_cgo_export.*
+
+# Folders
+_obj
+_test
+vendor/
+.idea/
+.vscode/
+
+# SQLite Database
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.sqlite-journal
+
+# Environment Variables
+.env
+
+# MacOS
+.DS_Store

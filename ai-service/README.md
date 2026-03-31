@@ -6,7 +6,7 @@ This service handles image analysis for detecting vehicle damage using **Google 
 
 ## Tech Stack
 
--   **Language**: [Python](https://www.python.org/) (v3.10+)
+-   **Language**: [Python](https://www.python.org/) (v3.11+)
 -   **Framework**: [FastAPI](https://fastapi.tiangolo.com/)
 -   **AI/ML**:
     -   **Google Cloud Vertex AI** (Gemini Pro Vision) for generative analysis.
@@ -16,7 +16,7 @@ This service handles image analysis for detecting vehicle damage using **Google 
 
 ## Prerequisites
 
--   Python 3.10+
+-   Python 3.11+
 -   `uv` package manager
 -   Google Cloud SDK (`gcloud`)
 
