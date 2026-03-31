@@ -18,7 +18,7 @@ import (
 	"encoding/csv"
 	"log"
 	"math/rand"
-	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -26,10 +26,12 @@ import (
 	"gorm.io/gorm"
 )
 
-const DataURL = "https://raw.githubusercontent.com/hongdnn/claimwise_ai/refs/heads/main/data/insurance_claims.csv"
+const DataPath = "data/insurance_claims.csv"
 
-var firstNames = []string{"John", "Jane", "Michael", "Sarah", "David", "Emily", "Robert", "Jessica", "William", "Jennifer"}
-var lastNames = []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"}
+var (
+	firstNames = []string{"John", "Jane", "Michael", "Sarah", "David", "Emily", "Robert", "Jessica", "William", "Jennifer"}
+	lastNames  = []string{"Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez"}
+)
 
 func SeedPolicyHolders(db *gorm.DB) {
 	// Check if table is empty
@@ -40,16 +42,16 @@ func SeedPolicyHolders(db *gorm.DB) {
 		return
 	}
 
-	log.Println("Seeding PolicyHolders table from remote CSV...")
+	log.Println("Seeding PolicyHolders table from local CSV...")
 
-	resp, err := http.Get(DataURL)
+	file, err := os.Open(DataPath)
 	if err != nil {
-		log.Printf("Failed to fetch CSV: %v", err)
+		log.Printf("Failed to open CSV: %v", err)
 		return
 	}
-	defer resp.Body.Close()
+	defer file.Close()
 
-	reader := csv.NewReader(resp.Body)
+	reader := csv.NewReader(file)
 	records, err := reader.ReadAll()
 	if err != nil {
 		log.Printf("Failed to read CSV: %v", err)

@@ -15,8 +15,9 @@
 package database
 
 import (
-	"os"
 	"log"
+	"os"
+
 	"example.com/claims-app/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

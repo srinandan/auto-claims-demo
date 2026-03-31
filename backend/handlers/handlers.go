@@ -33,10 +33,12 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-var BaseAIServiceURL string
-var AIServiceURL string
-var FindShopsURL string
-var httpClient *http.Client
+var (
+	BaseAIServiceURL string
+	AIServiceURL     string
+	FindShopsURL     string
+	httpClient       *http.Client
+)
 
 func init() {
 	BaseAIServiceURL = strings.TrimSpace(os.Getenv("AI_SERVICE_URL"))

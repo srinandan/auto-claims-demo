@@ -23,7 +23,7 @@ from google.cloud import storage
 import io
 
 # Local imports
-from claims_agent import run_claims_agent
+from claims_agent import claim_agent_service
 from repair_shop_agent import run_repair_shop_agent
 from appointment_agent import run_appointment_agent
 from car_damage_detector import CarDamageDetector
@@ -214,7 +214,7 @@ async def process_claims(request: ClaimsRequest):
     if MOCK_MODE:
         agent_response = mock_claims_agent_response(aggregated_findings)
     else:
-        agent_response = await run_claims_agent(aggregated_findings)
+        agent_response = await claim_agent_service.run_claims_agent(aggregated_findings)
 
     return ClaimsProcessResponse(
         findings=aggregated_findings,

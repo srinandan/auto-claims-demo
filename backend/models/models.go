@@ -58,7 +58,7 @@ type Estimate struct {
 	gorm.Model
 	ClaimID     uint    `json:"claim_id"`
 	TotalAmount float64 `json:"total_amount"`
-	Items       string  `json:"items"` // JSON string of line items
+	Items       string  `json:"items"`  // JSON string of line items
 	Source      string  `json:"source"` // "AI", "Shop"
 }
 

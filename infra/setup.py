@@ -106,7 +106,8 @@ def setup_infrastructure():
         "roles/run.admin",
         "roles/iam.serviceAccountTokenCreator",
         "roles/iam.serviceAccountUser",
-        "roles/discoveryengine.agentspaceAdmin"
+        "roles/discoveryengine.agentspaceAdmin",
+        "roles/agentregistry.viewer"
     ]
     for role in roles:
         print(f"Adding role {role}...")
