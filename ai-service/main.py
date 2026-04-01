@@ -24,7 +24,7 @@ import io
 
 # Local imports
 from claims_agent import claim_agent_service
-from repair_shop_agent import run_repair_shop_agent
+from repair_shop_agent import repair_shop_agent_service
 from appointment_agent import run_appointment_agent
 from car_damage_detector import CarDamageDetector
 from fastapi.concurrency import run_in_threadpool
@@ -229,7 +229,7 @@ async def find_repair_shops(request: RepairShopRequest):
     if MOCK_MODE:
         return mock_repair_shop_search()
 
-    shops = await run_repair_shop_agent(
+    shops = await repair_shop_agent_service.run_repair_shop_agent(
         request.zip_code,
         request.state,
         request.make,

@@ -30,164 +30,168 @@ from a2a.types import TransportProtocol
 from google.auth.transport.requests import Request
 from google.auth import default
 
-factory = None
-reasoningEngineId = ""
 
-class GoogleAuth(httpx.Auth):
+
+from shared_auth import GoogleAuth
+
+class RepairShopAgentService:
     def __init__(self):
-        self._credentials = None
-        self._request = None
+        self.project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
+        self.location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
 
-    def _get_token(self):
-        import google.auth
-        from google.auth.transport.requests import Request
-        if not self._credentials:
-            self._credentials, _ = google.auth.default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
-            self._request = Request()
-        
-        if not self._credentials.valid:
-            try:
-                self._credentials.refresh(self._request)
-            except Exception as e:
-                print(f"Error fetching/refreshing credentials: {e}")
-        return self._credentials.token
+        self.repair_shop_agent_url = os.getenv("REPAIR_SHOP_AGENT_URL")
+        self.agent_engine_enabled = os.getenv("AGENT_ENGINE_ENABLED", "false")
 
-    def auth_flow(self, request):
-        try:
-            token = self._get_token()
-            if token:
-                request.headers["Authorization"] = f"Bearer {token}"
-        except Exception as e:
-            print(f"GoogleAuth error: {e}")
+        if self.agent_engine_enabled == "true":
+            self.repair_shop_agent_card_url = f"{self.repair_shop_agent_url}/a2a/v1/card" if self.repair_shop_agent_url else ""
+        else:
+            self.repair_shop_agent_card_url = f"{self.repair_shop_agent_url}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}" if self.repair_shop_agent_url else ""
 
-        response = yield request
-
-        if response.status_code == 401:
-            print("Received 401 UNAUTHENTICATED. Attempting to force refresh credentials and retry...")
-            try:
-                if self._credentials and self._request:
-                    self._credentials.refresh(self._request)
-                token = self._get_token()
-                if token:
-                    request.headers["Authorization"] = f"Bearer {token}"
-                    yield request
-            except Exception as e:
-                print(f"Error on retry token fetch: {e}")
-
-def get_last_element(url_string):
-    return url_string.split('/')[-1]
-
-# Repair Shop Agent Definition
-MODEL_NAME = "gemini-2.5-flash"
-
-REPAIR_SHOP_AGENT_URL = os.getenv("REPAIR_SHOP_AGENT_URL")
-AGENT_ENGINE_ENABLED = os.getenv("AGENT_ENGINE_ENABLED", "false")
-
-if AGENT_ENGINE_ENABLED == "true":
-    REPAIR_SHOP_AGENT_CARD_URL = f"{REPAIR_SHOP_AGENT_URL}/a2a/v1/card"
-    factory = ClientFactory(
-        ClientConfig(
-            # Specify supported transport mechanisms
-            supported_transports=[TransportProtocol.http_json],
-            # Use client preferences for protocol negotiation
-            use_client_preference=True,
-            # Configure HTTP client with authentication            
-            httpx_client=httpx.AsyncClient(
-                auth=GoogleAuth(),
-                timeout=120.0
-            ),
+        self.factory = ClientFactory(
+            ClientConfig(
+                # Specify supported transport mechanisms
+                supported_transports=[TransportProtocol.http_json],
+                # Use client preferences for protocol negotiation
+                use_client_preference=True,
+                # Configure HTTP client with authentication            
+                httpx_client=httpx.AsyncClient(
+                    auth=GoogleAuth(),
+                    timeout=120.0
+                ),
+            )
         )
-    )
-    reasoningEngineId = get_last_element(REPAIR_SHOP_AGENT_URL)
-else:
-    REPAIR_SHOP_AGENT_CARD_URL = f"{REPAIR_SHOP_AGENT_URL}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}"
+        self.reasoning_engine_id = self.get_last_element(self.repair_shop_agent_url) if self.repair_shop_agent_url else "repair-shop-engine"
 
-repair_shop_agent = RemoteA2aAgent(
-        name="repair_shop_agent",
-        description=(
-            "Finds local auto repair shops using Google Search."
-        ),
-        agent_card=REPAIR_SHOP_AGENT_CARD_URL,
-        a2a_client_factory=factory,
-)
+        def header_provider(context=None):
+            token = GoogleAuth()._get_token()
+            return {"Authorization": f"Bearer {token}"} if token else {}
 
-async def run_repair_shop_agent(zip_code: str, state: str, make: str, model: str, damage_type: str) -> list:
-    """
-    Runs the repair shop agent to find shops.
-    Returns a list of shop dictionaries.
-    """
-
-    prompt_text = f"""
-    Please find auto repair shops for a customer.
-    Location: Zip Code {zip_code}, State {state}
-    Vehicle: {make} {model}
-    Damage: {damage_type}
-
-    Find the best repair shops near this location.
-    """
-
-    # session_service = VertexAiSessionService(
-    #     project=os.getenv("GOOGLE_CLOUD_PROJECT"),
-    #     location=os.getenv("GOOGLE_CLOUD_LOCATION"),
-    #     agent_engine_id=os.getenv("REASONING_ENGINE_ID")
-    # )
-    session_service = InMemorySessionService()    
-
-    # Create Content object
-    prompt_content = Content(parts=[Part(text=prompt_text)])
-
-    runner = Runner(
-        agent=repair_shop_agent,
-        app_name=reasoningEngineId,
-        session_service=session_service
-    )
-    user_id = "system" # internal usage
-
-    final_text = ""
-
-    session = await session_service.create_session(
-       app_name=reasoningEngineId,
-       user_id=user_id
-    )
-
-    # Run asynchronously
-    async for event in runner.run_async(user_id=user_id, session_id=session.id, new_message=prompt_content):
-        # Accumulate text from events
-        if hasattr(event, 'text') and event.text:
-            final_text += event.text
-        elif isinstance(event, str):
-            final_text += event
-        elif hasattr(event, 'content') and event.content and event.content.parts:
-            for part in event.content.parts:
-                if part.text:
-                   final_text += part.text
-
-    if not final_text:
-        return get_auto_shops_json()
-
-    try:
-        # Improved JSON extraction (similar to claims_agent.py)
-        cleaned_text = final_text.strip()
-
-        # Try to find JSON block if mixed with other text
-        json_match = re.search(r'\[.*\]', cleaned_text, re.DOTALL)
-        if json_match:
-            potential_json = json_match.group(0)
+        self.registry = None
+        if self.project_id:
             try:
-                return json.loads(potential_json)
-            except json.JSONDecodeError:
-                pass
+                from google.adk.integrations.agent_registry import AgentRegistry
+                self.registry = AgentRegistry(
+                    project_id=self.project_id,
+                    location=self.location,
+                    header_provider=header_provider,
+                )
+            except ImportError:
+                print("AgentRegistry could not be imported")
 
-        # Markdown cleanup fallback
-        if "```json" in cleaned_text:
-            cleaned_text = cleaned_text.split("```json")[1].split("```")[0]
-        elif "```" in cleaned_text:
-            cleaned_text = cleaned_text.split("```")[1].split("```")[0]
+        self.repair_shop_agent = self.get_repair_shop_agent()
+        # self.repair_shop_agent = self.get_registry_repair_shop_agent()
 
-        return json.loads(cleaned_text.strip())
-    except Exception as e:
-        print(f"Error parsing repair shop agent response: {e}. Raw: {final_text}")
-        return get_auto_shops_json()
+    @staticmethod
+    def get_last_element(url_string):
+        return url_string.split('/')[-1] if url_string else ""
+
+    def get_repair_shop_agent(self):
+        if not self.repair_shop_agent_card_url:
+            return None
+        return RemoteA2aAgent(
+            name="repair_shop_agent",
+            description=(
+                "Finds local auto repair shops using Google Search."
+            ),
+            agent_card=self.repair_shop_agent_card_url,
+            a2a_client_factory=self.factory,
+        )
+
+    def get_registry_repair_shop_agent(self):
+        if not self.registry:
+            raise ValueError("AgentRegistry is not configured or unavailable.")
+        agents_list = self.registry.list_agents(
+            filter_str="displayName:RepairShopAgent", page_size=1
+        )
+        a2a_server_name = agents_list.get("agents", [])[0]["name"] if agents_list.get("agents") else None
+
+        if not a2a_server_name:
+            raise ValueError("RepairShopAgent not found in Agent Registry")
+
+        return self.registry.get_remote_a2a_agent(a2a_server_name)
+
+    async def run_repair_shop_agent(self, zip_code: str, state: str, make: str, model: str, damage_type: str) -> list:
+        """
+        Runs the repair shop agent to find shops.
+        Returns a list of shop dictionaries.
+        """
+
+        prompt_text = f"""
+        Please find auto repair shops for a customer.
+        Location: Zip Code {zip_code}, State {state}
+        Vehicle: {make} {model}
+        Damage: {damage_type}
+
+        Find the best repair shops near this location.
+        """
+
+        # session_service = VertexAiSessionService(
+        #     project=os.getenv("GOOGLE_CLOUD_PROJECT"),
+        #     location=os.getenv("GOOGLE_CLOUD_LOCATION"),
+        #     agent_engine_id=os.getenv("REASONING_ENGINE_ID")
+        # )
+        session_service = InMemorySessionService()    
+
+        if not self.repair_shop_agent:
+            return get_auto_shops_json()
+
+        # Create Content object
+        prompt_content = Content(parts=[Part(text=prompt_text)])
+
+        runner = Runner(
+            agent=self.repair_shop_agent,
+            app_name=self.reasoning_engine_id,
+            session_service=session_service
+        )
+        user_id = "system" # internal usage
+
+        final_text = ""
+
+        session = await session_service.create_session(
+           app_name=self.reasoning_engine_id,
+           user_id=user_id
+        )
+
+        # Run asynchronously
+        async for event in runner.run_async(user_id=user_id, session_id=session.id, new_message=prompt_content):
+            # Accumulate text from events
+            if hasattr(event, 'text') and event.text:
+                final_text += event.text
+            elif isinstance(event, str):
+                final_text += event
+            elif hasattr(event, 'content') and event.content and event.content.parts:
+                for part in event.content.parts:
+                    if part.text:
+                       final_text += part.text
+
+        if not final_text:
+            return get_auto_shops_json()
+
+        try:
+            # Improved JSON extraction (similar to claims_agent.py)
+            cleaned_text = final_text.strip()
+
+            # Try to find JSON block if mixed with other text
+            json_match = re.search(r'\[.*\]', cleaned_text, re.DOTALL)
+            if json_match:
+                potential_json = json_match.group(0)
+                try:
+                    return json.loads(potential_json)
+                except json.JSONDecodeError:
+                    pass
+
+            # Markdown cleanup fallback
+            if "```json" in cleaned_text:
+                cleaned_text = cleaned_text.split("```json")[1].split("```")[0]
+            elif "```" in cleaned_text:
+                cleaned_text = cleaned_text.split("```")[1].split("```")[0]
+
+            return json.loads(cleaned_text.strip())
+        except Exception as e:
+            print(f"Error parsing repair shop agent response: {e}. Raw: {final_text}")
+            return get_auto_shops_json()
+
+repair_shop_agent_service = RepairShopAgentService()
 
 import json
 

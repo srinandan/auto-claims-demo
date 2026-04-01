@@ -30,52 +30,12 @@ from google.auth import default
 
 factory = None
 
-class GoogleAuth(httpx.Auth):
-    def __init__(self):
-        self._credentials = None
-        self._request = None
-
-    def _get_token(self):
-        import google.auth
-        from google.auth.transport.requests import Request
-        if not self._credentials:
-            self._credentials, _ = google.auth.default(scopes=['https://www.googleapis.com/auth/cloud-platform'])
-            self._request = Request()
-        
-        if not self._credentials.valid:
-            try:
-                self._credentials.refresh(self._request)
-            except Exception as e:
-                print(f"Error fetching/refreshing credentials: {e}")
-        return self._credentials.token
-
-    def auth_flow(self, request):
-        try:
-            token = self._get_token()
-            if token:
-                request.headers["Authorization"] = f"Bearer {token}"
-        except Exception as e:
-            print(f"GoogleAuth error: {e}")
-
-        response = yield request
-
-        if response.status_code == 401:
-            print("Received 401 UNAUTHENTICATED. Attempting to force refresh credentials and retry...")
-            try:
-                if self._credentials and self._request:
-                    self._credentials.refresh(self._request)
-                token = self._get_token()
-                if token:
-                    request.headers["Authorization"] = f"Bearer {token}"
-                    yield request
-            except Exception as e:
-                print(f"Error on retry token fetch: {e}")
+from shared_auth import GoogleAuth
 
 class ClaimAgentService:
     def __init__(self):
         self.project_id = os.getenv("GOOGLE_CLOUD_PROJECT")
         self.location = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-        self.agent_registry_location = os.getenv("AGENT_REGISTRY_LOCATION", "us-central1")
         
         self.assessor_agent_url = os.getenv("ASSESSOR_AGENT_URL")
         self.processor_agent_url = os.getenv("PROCESSOR_AGENT_URL")
@@ -109,17 +69,17 @@ class ClaimAgentService:
                 from google.adk.integrations.agent_registry import AgentRegistry
                 self.registry = AgentRegistry(
                     project_id=self.project_id,
-                    location=self.agent_registry_location,
+                    location=self.location,
                     header_provider=header_provider,
                 )
             except ImportError:
                 print("AgentRegistry could not be imported")
 
-        # self.assessor_agent = self.get_assessor_agent()
-        self.assessor_agent = self.get_registry_assessor_agent()
+        self.assessor_agent = self.get_assessor_agent()
+        # self.assessor_agent = self.get_registry_assessor_agent()
         
-        # self.processor_agent = self.get_processor_agent()
-        self.processor_agent = self.get_registry_processor_agent()
+        self.processor_agent = self.get_processor_agent()
+        # self.processor_agent = self.get_registry_processor_agent()
 
 
 
