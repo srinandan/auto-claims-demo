@@ -46,7 +46,6 @@ deploy:
 		--entrypoint-module=app.agent_engine_app \
 		--entrypoint-object=agent_engine \
 		--location=${REGION} \
-		--agent-identity \
 		--set-env-vars=REASONING_ENGINE_ID=${REASONING_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true \
 		--requirements-file=app/app_utils/.requirements.txt
 

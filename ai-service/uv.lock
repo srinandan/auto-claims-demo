@@ -252,6 +252,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-fastapi" },
     { name = "opentelemetry-instrumentation-google-genai" },
     { name = "opentelemetry-instrumentation-httpx" },
+    { name = "opentelemetry-propagator-gcp" },
     { name = "pillow" },
     { name = "python-multipart" },
     { name = "requests" },
@@ -274,6 +275,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.59b0" },
     { name = "opentelemetry-instrumentation-google-genai", specifier = ">=0.1.0" },
     { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.59b0" },
+    { name = "opentelemetry-propagator-gcp", specifier = ">=1.11.0" },
     { name = "pillow", specifier = ">=12.1.0" },
     { name = "python-multipart", specifier = ">=0.0.22" },
     { name = "requests", specifier = ">=2.32.5" },
@@ -2766,6 +2768,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/18/6b/1bdf36b68cace9b4eae3cbbade4150c71c90aa392b127dda5bb5c2a49307/opentelemetry_instrumentation_httpx-0.59b0.tar.gz", hash = "sha256:a1cb9b89d9f05a82701cc9ab9cfa3db54fd76932489449778b350bc1b9f0e872", size = 19886, upload-time = "2025-10-16T08:39:48.428Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/58/16/c1e0745d20af392ec9060693531d7f01239deb2d81e460d0c379719691b8/opentelemetry_instrumentation_httpx-0.59b0-py3-none-any.whl", hash = "sha256:7dc9f66aef4ca3904d877f459a70c78eafd06131dc64d713b9b1b5a7d0a48f05", size = 15197, upload-time = "2025-10-16T08:38:55.507Z" },
+]
+
+[[package]]
+name = "opentelemetry-propagator-gcp"
+version = "1.11.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "opentelemetry-api" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/61/d2/97d57d0214886652e4f051376153629ebe4844728fd0a6cd5f0216f254a7/opentelemetry_propagator_gcp-1.11.0.tar.gz", hash = "sha256:a8a9ffae6e769fc2155359a4ee35c4d2bae0826a2637fcde67334f596293683d", size = 10696, upload-time = "2025-11-04T19:32:16.059Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/79/e0053c7f516357eabd71187148289a54d051e6996ad28f986795214d418a/opentelemetry_propagator_gcp-1.11.0-py3-none-any.whl", hash = "sha256:d96d57a8f46c4395ea65be44c46bd7d01e57c43cf93d8a13568e51fe2525f673", size = 9646, upload-time = "2025-11-04T19:32:10.164Z" },
 ]
 
 [[package]]

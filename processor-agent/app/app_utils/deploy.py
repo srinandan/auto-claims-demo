@@ -125,7 +125,7 @@ def print_deployment_success(
         print(f"Service Account: {service_account}")
     else:
         default_sa = (
-            f"service-{project_number}@gcp-sa-aiplatform-re.iam.gserviceaccount.com"
+            f"auto-claims-sa@{project}.iam.gserviceaccount.com"
         )
         print(f"Service Account: {default_sa}")
     console_url = f"https://console.cloud.google.com/vertex-ai/agents/locations/{location}/agent-engines/{agent_engine_id}?project={project}"
