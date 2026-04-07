@@ -39,7 +39,7 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 root_agent = Agent(
     name="AssessorAgent",
     model=Gemini(
-        model="gemini-2.5-flash",
+        model=os.environ.get("MODEL", "gemini-2.5-flash"),
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     description="Assess damage severity based on findings.",

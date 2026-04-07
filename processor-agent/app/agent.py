@@ -66,7 +66,7 @@ def generate_repair_cost(severity: str) -> dict:
         }
 
 # --- Agents Definition ---
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
 root_agent = Agent(
     name="ProcessorAgent",

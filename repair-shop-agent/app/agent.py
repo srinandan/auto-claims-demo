@@ -37,7 +37,7 @@ os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # Repair Shop Agent Definition
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
 root_agent = Agent(
     name="RepairShopAgent",

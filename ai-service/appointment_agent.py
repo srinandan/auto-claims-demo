@@ -72,7 +72,7 @@ def create_calendar_event(shop_name: str, date: str, time: str, customer_name: s
     return f"Appointment confirmed: {shop_name} on {date} at {time} for {customer_name}."
 
 # Appointment Agent Definition
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
 appointment_agent = LlmAgent(
     name="AppointmentAgent",
