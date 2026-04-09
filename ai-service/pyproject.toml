@@ -12,7 +12,7 @@ dependencies = [
     "requests>=2.32.5",
     "uvicorn>=0.40.0",
     "google-genai",
-    "google-adk[a2a]",
+    "google-adk[a2a,bigquery-analytics] >= 1.29.0, <2.0.0",
     "google-cloud-storage>=3.9.0",
     "google-cloud-bigquery",
     "ultralytics>=8.4.13",
