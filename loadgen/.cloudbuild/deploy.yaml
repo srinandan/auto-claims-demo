@@ -65,8 +65,16 @@ steps:
       - "1"
       - "--min-instances"
       - "1"
+      - "--max=1"
+      - "--min=1"
+      - "--no-iap"
       - "--timeout"
       - "180"
+      - "--cpu-boost"
+      - "--session-affinity"
+      - "--ingress"
+      - "all"
+      - "--labels=appid=auto-claims"
 
 substitutions:
   _STAGING_PROJECT_ID: ${PROJECT_ID}

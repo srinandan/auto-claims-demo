@@ -19,7 +19,7 @@ steps:
     args: ['-c', 'docker pull ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:latest || exit 0']
   - name: "gcr.io/cloud-builders/docker"
     env:
-      - 'DOCKER_BUILDKIT=1'  
+      - 'DOCKER_BUILDKIT=1'
     args:
       [
         "build",
@@ -73,10 +73,10 @@ steps:
       - "--no-gpu-zonal-redundancy"
       - "--concurrency"
       - "10"
-      - "--service-account" 
+      - "--service-account"
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
-      - "--set-env-vars" 
-      - 'AGENT_ENGINE_ENABLED=${_AGENT_ENGINE_ENABLED},GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,ASSESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/6449421847720099840,PROCESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/1644081045315780608,REPAIR_SHOP_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/7826283084579340288,BUCKET_NAME=${PROJECT_ID}-auto-claims'
+      - "--set-env-vars"
+      - 'AGENT_ENGINE_ENABLED=${_AGENT_ENGINE_ENABLED},GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,ASSESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_ASSESSOR_AGENT},PROCESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_PROCESSOR_AGENT},REPAIR_SHOP_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_REPAIR_AGENT},BUCKET_NAME=${PROJECT_ID}-auto-claims'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max=1"
@@ -88,7 +88,7 @@ steps:
       - "--cpu-boost"
       - "--session-affinity"
       - "--set-secrets"
-      - 'HF_TOKEN=hf-token:latest'        
+      - 'HF_TOKEN=hf-token:latest'
       - "--ingress"
       - "all"
       - "--labels=appid=auto-claims"
@@ -99,6 +99,9 @@ substitutions:
   _CONTAINER_NAME: auto-claims-ai-service
   _COMMIT_SHA: ${_COMMIT_SHA}
   _AGENT_ENGINE_ENABLED: "true"
+  _ASSESSOR_AGENT: "9116605059751215104"
+  _PROCESSOR_AGENT: "8691014894964703232"
+  _REPAIR_AGENT: "109405805010223104"
 
 images:
   - ${_REGION}-docker.pkg.dev/$PROJECT_ID/$_ARTIFACT_REGISTRY_REPO_NAME/$_CONTAINER_NAME:${_COMMIT_SHA}
