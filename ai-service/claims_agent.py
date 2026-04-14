@@ -15,9 +15,10 @@
 import os
 from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
-from google.adk.sessions import VertexAiSessionService, InMemorySessionService
+from google.adk.sessions import VertexAiSessionService
+from google.adk.memory import VertexAiMemoryBankService
 from google.adk.agents import LlmAgent, SequentialAgent
-from google.adk.runners import InMemoryRunner, Runner
+from google.adk.runners import Runner
 from google.genai.types import Content, Part
 import json
 import uuid
@@ -57,31 +58,7 @@ class ClaimAgentService:
                 ),
             )
         )
-        self.reasoning_engine_id = self.get_last_element(self.assessor_agent_url) if self.assessor_agent_url else "claims-engine"
-
-        def header_provider(context=None):
-            token = GoogleAuth()._get_token()
-            return {"Authorization": f"Bearer {token}"} if token else {}
-
-        self.registry = None
-        if self.project_id:
-            try:
-                from google.adk.integrations.agent_registry import AgentRegistry
-                self.registry = AgentRegistry(
-                    project_id=self.project_id,
-                    location=self.location,
-                    header_provider=header_provider,
-                )
-            except ImportError:
-                print("AgentRegistry could not be imported")
-
-        self.assessor_agent = self.get_assessor_agent()
-        # self.assessor_agent = self.get_registry_assessor_agent()
-        
-        self.processor_agent = self.get_processor_agent()
-        # self.processor_agent = self.get_registry_processor_agent()
-
-
+        self.reasoning_engine_id = os.getenv("SHARED_AGENT_ENGINE_ID")
 
     @staticmethod
     def get_last_element(url_string):
@@ -144,12 +121,38 @@ class ClaimAgentService:
         Returns the final result dictionary.
         """
 
-        # session_service = VertexAiSessionService(
-        #     project=os.getenv("GOOGLE_CLOUD_PROJECT"),
-        #     location=os.getenv("GOOGLE_CLOUD_LOCATION"),
-        #     agent_engine_id=os.getenv("REASONING_ENGINE_ID")
-        # )
-        session_service = InMemorySessionService()
+        # Initialize AgentRegistry with header_provider and credentials
+        # every time so that the latest headers and injected
+
+        def header_provider(context=None):
+            token = GoogleAuth()._get_token()
+            return {"Authorization": f"Bearer {token}"} if token else {}
+
+        self.registry = None
+        if self.project_id:
+            try:
+                from google.adk.integrations.agent_registry import AgentRegistry
+                self.registry = AgentRegistry(
+                    project_id=self.project_id,
+                    location=self.location,
+                    header_provider=header_provider,
+                )
+            except ImportError:
+                print("AgentRegistry could not be imported")
+
+        # self.assessor_agent = self.get_assessor_agent()
+        self.assessor_agent = self.get_registry_assessor_agent()
+        
+        # self.processor_agent = self.get_processor_agent()
+        self.processor_agent = self.get_registry_processor_agent()        
+
+        session_service = VertexAiSessionService(
+            project=self.project_id,
+            location=self.location,
+            agent_engine_id=self.reasoning_engine_id
+        )
+
+        memory_service = VertexAiMemoryBankService(agent_engine_id=self.reasoning_engine_id)
 
         if not self.assessor_agent or not self.processor_agent:
              return {
@@ -175,7 +178,8 @@ class ClaimAgentService:
         runner = Runner(
             agent=claims_sequential_agent,
             app_name=self.reasoning_engine_id,
-            session_service=session_service
+            session_service=session_service,
+            memory_service=memory_service,
         )
         user_id = "system" # internal usage
 

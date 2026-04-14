@@ -40,6 +40,10 @@ AI Service / Orchestrator  ─────────────────�
      ▼            ▼                 ▼                  │
 assessor-agent  processor-agent  repair-shop-agent ◄──┘
   (port 8081)   (port 8082)        (port 8083)
+     │            │                 │
+     └────────────┼─────────────────┘
+                  ▼
+            agent-engine (Shared Session & Memory)
 ```
 
 ---
@@ -121,6 +125,21 @@ assessor-agent  processor-agent  repair-shop-agent ◄──┘
 - Find certified repair shops near the claimant.
 - Handle appointment scheduling requests.
 - Relay booking confirmations back through the AI service to the backend.
+
+---
+
+### 5. Agent Engine
+
+| Property | Value |
+|---|---|
+| **Location** | `./agent-engine/` |
+| **Runtime** | Python / Agent Engine Instance |
+| **Role** | Shared session and memory provider. |
+
+**Key Responsibilities:**
+- Provides a centralized service for session state management.
+- Maintains shared long-term memory across all agents in the system.
+- Ensures consistency in the claim review and processing workflow by allowing agents to access a unified context.
 
 ---
 

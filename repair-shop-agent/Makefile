@@ -4,7 +4,8 @@ REGION ?= $(shell gcloud config get-value compute/region)
 _COMMIT_SHA ?= $(shell echo | find app pyproject.toml uv.lock -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 PORT ?= 8083
-REASONING_ENGINE_ID ?= 4378713248397000704
+REASONING_ENGINE_ID ?= 109405805010223104
+SHARED_AGENT_ENGINE_ID ?= 3064462601669836800
 
 .PHONY: local deploy
 
@@ -39,6 +40,8 @@ deploy:
 	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
 	export LOGS_BUCKET_NAME=${PROJECT_ID} ;\
 	export OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT} ;\
+	export REASONING_ENGINE_ID=${REASONING_ENGINE_ID} ;\
+	export SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID} ;\
 	(uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > app/app_utils/.requirements.txt 2>/dev/null || \
 	uv export --no-hashes --no-header --no-dev --no-emit-project > app/app_utils/.requirements.txt) && \
 	uv run -m app.app_utils.deploy \
@@ -46,5 +49,6 @@ deploy:
 		--entrypoint-module=app.agent_engine_app \
 		--entrypoint-object=agent_engine \
 		--location=${REGION} \
-		--set-env-vars=REASONING_ENGINE_ID=${REASONING_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true \
+		--agent-identity \
+		--set-env-vars=OTEL_SERVICE_NAME=auto-claims-repair-shop-agent,OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true,SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID},REASONING_ENGINE_ID=${REASONING_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true \
 		--requirements-file=app/app_utils/.requirements.txt
