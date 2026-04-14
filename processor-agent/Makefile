@@ -3,8 +3,10 @@ PROJECT_NUMBER ?= $(shell gcloud projects describe ${PROJECT_ID} --format="value
 REGION ?= $(shell gcloud config get-value compute/region)
 _COMMIT_SHA ?= $(shell echo | find app pyproject.toml uv.lock -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
+BQ_ANALYTICS_DATASET_LOCATION="US"
 PORT ?= 8082
-REASONING_ENGINE_ID ?= 4562797883165769728
+REASONING_ENGINE_ID ?= 4554265123178414080
+SHARED_AGENT_ENGINE_ID ?= 3064462601669836800
 
 .PHONY: local deploy
 
@@ -37,9 +39,12 @@ deploy:
 	export GOOGLE_CLOUD_LOCATION=${REGION} ;\
 	export BQ_ANALYTICS_GCS_BUCKET=${PROJECT_ID} ;\
 	export BQ_ANALYTICS_CONNECTION_ID=${PROJECT_ID} ;\
+	export BQ_ANALYTICS_DATASET_LOCATION=${BQ_ANALYTICS_DATASET_LOCATION} ;\
 	export PROJECT_NUMBER=${PROJECT_NUMBER} ;\
 	export LOGS_BUCKET_NAME=${PROJECT_ID} ;\
 	export OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT} ;\
+	export REASONING_ENGINE_ID=${REASONING_ENGINE_ID} ;\
+	export SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID} ;\
 	(uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > app/app_utils/.requirements.txt 2>/dev/null || \
 	uv export --no-hashes --no-header --no-dev --no-emit-project > app/app_utils/.requirements.txt) && \
 	uv run -m app.app_utils.deploy \
@@ -47,5 +52,6 @@ deploy:
 		--entrypoint-module=app.agent_engine_app \
 		--entrypoint-object=agent_engine \
 		--location=${REGION} \
-		--set-env-vars=REASONING_ENGINE_ID=${REASONING_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true \
+		--agent-identity \
+		--set-env-vars=GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES=false,OTEL_SERVICE_NAME=auto-claims-processor-agent,OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true,REASONING_ENGINE_ID=${REASONING_ENGINE_ID},SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true,BQ_ANALYTICS_DATASET_LOCATION=${BQ_ANALYTICS_DATASET_LOCATION} \
 		--requirements-file=app/app_utils/.requirements.txt

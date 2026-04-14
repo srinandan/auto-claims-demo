@@ -54,8 +54,15 @@ def setup_telemetry() -> str | None:
             "Prompt-response logging disabled (set LOGS_BUCKET_NAME=gs://your-bucket and OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=NO_CONTENT to enable)"
         )
 
+    if os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY") == "true" and os.environ.get("REASONING_ENGINE_ID"):
+        logging.info("Running in Agent Engine with telemetry enabled. Skipping manual OTel exporters.")
+        _setup_instrumentation_lib_if_installed()
+        return bucket
+
     # Set up OpenTelemetry exporters for Cloud Trace and Cloud Logging
-    credentials, project_id = google.auth.default()
+    credentials, project_id = google.auth.default(
+        scopes=["https://www.googleapis.com/auth/cloud-platform"]
+    )
     otel_hooks = get_gcp_exporters(
         enable_cloud_tracing=True,
         enable_cloud_metrics=False,

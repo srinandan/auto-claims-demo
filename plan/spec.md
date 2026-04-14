@@ -49,6 +49,7 @@ A collection of specialized AI services, built with FastAPI, uv, and the Google 
 - **`assessor-agent`**: A remote A2A agent (port 8081) for performing assessment tasks, evaluating the severity of vehicle damage based on visual analysis and claim details.
 - **`processor-agent`**: A remote A2A agent (port 8082) focused on generating repair estimates and making final claim decisions based on the initial assessment.
 - **`repair-shop-agent`**: A remote A2A agent (port 8083) standalone service for repair shop interactions, finding suitable repair shops and handling appointment bookings.
+- **`agent-engine`**: A specialized service that provides shared session and memory management across all agents, ensuring a consistent context for the entire claims process.
 
 ### D. Load Generator
 - **`loadgen`**: A Node.js-based utility for generating synthetic load against the backend API. This is crucial for performance testing, OpenTelemetry traces, and ensuring the system's scalability and reliability under pressure. It is not part of the core production application.

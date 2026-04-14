@@ -127,7 +127,7 @@ os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
     os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 gemini_location = os.environ.get("GOOGLE_CLOUD_LOCATION")
-engine_id = os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID") or os.environ.get("REASONING_ENGINE_ID")
+engine_id = os.environ.get("SHARED_AGENT_ENGINE_ID")
 logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
 agent_engine = AgentEngineApp.create(
     app=adk_app,
@@ -136,15 +136,15 @@ agent_engine = AgentEngineApp.create(
         if logs_bucket_name
         else InMemoryArtifactService()
     ),
-    # session_service=SafeVertexAiSessionService(
-    #     project=project_id,
-    #     location=gemini_location,
-    #     agent_engine_id=os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_ID")
-    # ),
-    session_service=InMemorySessionService(),
+    session_service=VertexAiSessionService(
+        project=project_id,
+        location=gemini_location,
+        agent_engine_id=os.environ.get("SHARED_AGENT_ENGINE_ID")
+    ),
+    # session_service=InMemorySessionService(),
     memory_service=VertexAiMemoryBankService(
         project=project_id,
         location=gemini_location,
-        agent_engine_id=engine_id
+        agent_engine_id=os.environ.get("SHARED_AGENT_ENGINE_ID")
     ),
 )

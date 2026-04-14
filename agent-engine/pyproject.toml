@@ -1,22 +1,17 @@
 [project]
-name = "auto-claims-processor-agent"
+name = "building-permit-agent-engine"
 version = "0.1.0"
-description = "An AI agent that processes and moves claims through the workflow for the Auto Claims Demo."
+description = "Vertex AI Agent Engine deployment for building permit review."
 authors = [
     {name = "Your Name", email = "your@email.com"},
 ]
 dependencies = [
-    "google-adk[bigquery-analytics]>=1.29.0,<2.0.0",
-    "a2a-sdk~=0.3.24",
-    "nest-asyncio>=1.6.0,<2.0.0",
+    "google-adk>=1.15.0,<2.0.0",
     "opentelemetry-instrumentation-google-genai>=0.1.0,<1.0.0",
     "gcsfs>=2024.11.0",
     "google-cloud-logging>=3.12.0,<4.0.0",
-    "google-cloud-aiplatform[agent-engines,evaluation]>=1.130.0",
+    "google-cloud-aiplatform[evaluation,agent-engines]>=1.130.0",
     "protobuf>=6.31.1,<7.0.0",
-    "opentelemetry-instrumentation-httpx>=0.59b0",
-    "opentelemetry-instrumentation-fastapi>=0.59b0",
-    "opentelemetry-instrumentation-grpc>=0.59b0",
 ]
 requires-python = ">=3.10,<3.14"
 
@@ -102,18 +97,19 @@ packages = ["app","frontend"]
 [tool.agent-starter-pack]
 # Generation metadata - enables CLI commands to understand project context
 # These fields allow any generated project to work as a remote template
-name = "auto-claims-processor-agent"
-description = "An AI agent that processes and moves claims through the workflow for the Auto Claims Demo."
-base_template = "adk_a2a"
+name = "agent-engine"
+description = "Simple ReAct agent"
+base_template = "adk"
 agent_directory = "app"
 
 # Generation context
-generated_at = "2026-02-16T18:18:08.145743+00:00"
-asp_version = "0.38.0"
+generated_at = "2026-03-12T03:17:38.619634+00:00"
+asp_version = "0.39.1"
 
 [tool.agent-starter-pack.create_params]
 # Parameters used during project creation
 deployment_target = "agent_engine"
-cicd_runner = "google_cloud_build"
+session_type = "none"
+cicd_runner = "skip"
 include_data_ingestion = false
 datastore = "none"

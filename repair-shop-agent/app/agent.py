@@ -14,7 +14,7 @@
 # limitations under the License.
 
 import datetime
-from google.adk.tools import google_search
+from google.adk.tools import google_search, load_memory
 
 from google.adk.agents import Agent
 from google.adk.apps import App
@@ -35,6 +35,11 @@ _, project_id = auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+
+async def auto_save_session_to_memory_callback(callback_context):
+    await callback_context._invocation_context.memory_service.add_session_to_memory(
+        callback_context._invocation_context.session
+    )
 
 # Repair Shop Agent Definition
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
@@ -62,7 +67,8 @@ root_agent = Agent(
     - Do not include markdown formatting (like ```json ... ```).
     - If you cannot find any shops, return an empty list [].
     """,
-    tools=[google_search],
+    tools=[google_search, load_memory],
+    after_agent_callback=auto_save_session_to_memory_callback,
     output_key="shops"
 )
 
@@ -70,7 +76,7 @@ root_agent = Agent(
 _plugins = []
 _project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
 _dataset_id = os.environ.get("BQ_ANALYTICS_DATASET_ID", "adk_agent_analytics")
-_location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+_location = os.environ.get("BQ_ANALYTICS_DATASET_LOCATION", "US")
 
 if _project_id:
     try:
