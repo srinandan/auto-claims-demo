@@ -45,6 +45,10 @@ class ClaimAgentService:
         self.assessor_agent_card_url = f"{self.assessor_agent_url}/a2a/v1/card" if self.assessor_agent_url else ""
         self.processor_agent_card_url = f"{self.processor_agent_url}/a2a/v1/card" if self.processor_agent_url else ""
         
+        self.httpx_client = httpx.AsyncClient(
+            auth=GoogleAuth(),
+            timeout=120,
+        )
         self.factory = ClientFactory(
             ClientConfig(
                 # Specify supported transport mechanisms
@@ -52,10 +56,7 @@ class ClaimAgentService:
                 # Use client preferences for protocol negotiation
                 use_client_preference=True,
                 # Configure HTTP client with authentication            
-                httpx_client=httpx.AsyncClient(
-                    auth=GoogleAuth(),
-                    timeout=120,
-                ),
+                httpx_client=self.httpx_client,
             )
         )
         self.reasoning_engine_id = os.getenv("SHARED_AGENT_ENGINE_ID")
@@ -99,7 +100,7 @@ class ClaimAgentService:
         if not a2a_server_name:
             raise ValueError("AssessorAgent not found in Agent Registry")
 
-        return self.registry.get_remote_a2a_agent(a2a_server_name)
+        return self.registry.get_remote_a2a_agent(a2a_server_name, httpx_client=self.httpx_client)
 
     def get_registry_processor_agent(self):
         if not self.registry:
@@ -112,7 +113,7 @@ class ClaimAgentService:
         if not a2a_server_name:
             raise ValueError("ProcessorAgent not found in Agent Registry")
 
-        return self.registry.get_remote_a2a_agent(a2a_server_name)
+        return self.registry.get_remote_a2a_agent(a2a_server_name, httpx_client=self.httpx_client)
 
     # Helper to run the agent
     async def run_claims_agent(self, findings: list[str]) -> dict:
@@ -125,8 +126,7 @@ class ClaimAgentService:
         # every time so that the latest headers and injected
 
         def header_provider(context=None):
-            token = GoogleAuth()._get_token()
-            return {"Authorization": f"Bearer {token}"} if token else {}
+            return GoogleAuth()._get_token()
 
         self.registry = None
         if self.project_id:

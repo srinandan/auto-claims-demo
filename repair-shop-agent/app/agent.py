@@ -70,7 +70,7 @@ root_agent = Agent(
 _plugins = []
 _project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
 _dataset_id = os.environ.get("BQ_ANALYTICS_DATASET_ID", "adk_agent_analytics")
-_location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+_location = os.environ.get("BQ_ANALYTICS_DATASET_LOCATION", "US")
 
 if _project_id:
     try:

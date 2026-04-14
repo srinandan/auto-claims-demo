@@ -19,31 +19,39 @@ class GoogleAuth(httpx.Auth):
                 self._credentials.refresh(self._request)
             except Exception as e:
                 print(f"Error fetching/refreshing credentials: {e}")
-        return self._credentials.token
+                
+        headers = {}
+        if self._credentials and self._credentials.token:
+            headers["Authorization"] = f"Bearer {self._credentials.token}"
+            
+        try:
+            from opentelemetry.propagate import inject
+            otel_headers = {}
+            inject(otel_headers)
+            headers.update(otel_headers)
+        except ImportError:
+            pass
+            
+        return headers
 
     def auth_flow(self, request):
         try:
-            token = self._get_token()
-            if token:
-                request.headers["Authorization"] = f"Bearer {token}"
+            headers = self._get_token()
+            for k, v in headers.items():
+                request.headers[k] = v
         except Exception as e:
             print(f"GoogleAuth error: {e}")
-
-        from opentelemetry.propagate import inject
-        otel_headers = {}
-        inject(otel_headers)
-        for k, v in otel_headers.items():
-            request.headers[k] = v
 
         response = yield request
 
         if response.status_code == 401:
             print("Received 401 UNAUTHENTICATED. Attempting to force refresh credentials and retry...")
             try:
-                token = self._get_token(force_refresh=True)
-                if token:
-                    request.headers["Authorization"] = f"Bearer {token}"
-                    yield request
+                headers = self._get_token(force_refresh=True)
+                for k, v in headers.items():
+                    request.headers[k] = v
+                yield request
             except Exception as e:
                 print(f"Error on retry token fetch: {e}")
+
 

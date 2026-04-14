@@ -108,8 +108,8 @@ class RepairShopAgentService:
         """
 
         def header_provider(context=None):
-            token = GoogleAuth()._get_token()
-            return {"Authorization": f"Bearer {token}"} if token else {}
+            return GoogleAuth()._get_token()
+
 
         self.registry = None
         if self.project_id:
@@ -139,7 +139,7 @@ class RepairShopAgentService:
         )
 
         if not self.repair_shop_agent:
-            return get_auto_shops_json()
+            return get_auto_shops_list()
 
         # Create Content object
         prompt_content = Content(parts=[Part(text=prompt_text)])
@@ -172,7 +172,7 @@ class RepairShopAgentService:
                        final_text += part.text
 
         if not final_text:
-            return get_auto_shops_json()
+            return get_auto_shops_list()
 
         try:
             # Improved JSON extraction (similar to claims_agent.py)
@@ -196,15 +196,15 @@ class RepairShopAgentService:
             return json.loads(cleaned_text.strip())
         except Exception as e:
             print(f"Error parsing repair shop agent response: {e}. Raw: {final_text}")
-            return get_auto_shops_json()
+            return get_auto_shops_list()
 
 repair_shop_agent_service = RepairShopAgentService()
 
 import json
 
-def get_auto_shops_json():
+def get_auto_shops_list():
     """
-    Returns a JSON-formatted string containing a list of auto repair shops.
+    Returns a list of auto repair shops.
     """
     shops_data = [
         {
@@ -230,5 +230,4 @@ def get_auto_shops_json():
         }
     ]
     
-    # Convert the Python list of dictionaries into a JSON string
-    return json.dumps(shops_data, indent=2)
+    return shops_data

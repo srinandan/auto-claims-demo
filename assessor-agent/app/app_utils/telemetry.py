@@ -55,7 +55,9 @@ def setup_telemetry() -> str | None:
         )
 
     # Set up OpenTelemetry exporters for Cloud Trace and Cloud Logging
-    credentials, project_id = google.auth.default()
+    credentials, project_id = google.auth.default(
+        scopes=["https://www.googleapis.com/auth/cloud-platform"]
+    )
     otel_hooks = get_gcp_exporters(
         enable_cloud_tracing=True,
         enable_cloud_metrics=False,
