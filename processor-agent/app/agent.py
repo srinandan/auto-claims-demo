@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 from google.adk.agents import Agent
 from google.adk.apps import App
 from google.adk.models import Gemini
-from google.adk.tools import LongRunningFunctionTool
+from google.adk.tools import LongRunningFunctionTool, load_memory
 from google.genai import types
 import logging
 from google.adk.plugins.bigquery_agent_analytics_plugin import (
@@ -65,6 +65,11 @@ def generate_repair_cost(severity: str) -> dict:
             "total_cost": 4500.00
         }
 
+async def auto_save_session_to_memory_callback(callback_context):
+    await callback_context._invocation_context.memory_service.add_session_to_memory(
+        callback_context._invocation_context.session
+    )
+
 # --- Agents Definition ---
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
@@ -95,7 +100,9 @@ root_agent = Agent(
     """,
     tools=[
         generate_repair_cost,
+        load_memory,
     ],
+    after_agent_callback=auto_save_session_to_memory_callback,
     output_key="final_result"
 )
 

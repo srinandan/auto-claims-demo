@@ -171,6 +171,8 @@ class RepairShopAgentService:
                     if part.text:
                        final_text += part.text
 
+        await memory_service.add_session_to_memory(session)
+
         if not final_text:
             return get_auto_shops_list()
 

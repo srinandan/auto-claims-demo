@@ -19,7 +19,7 @@ from zoneinfo import ZoneInfo
 from google.adk.agents import Agent
 from google.adk.apps import App
 from google.adk.models import Gemini
-from google.adk.tools import LongRunningFunctionTool
+from google.adk.tools import LongRunningFunctionTool, load_memory
 from google.genai import types
 import logging
 from google.adk.plugins.bigquery_agent_analytics_plugin import (
@@ -35,6 +35,11 @@ _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
+
+async def auto_save_session_to_memory_callback(callback_context):
+    await callback_context._invocation_context.memory_service.add_session_to_memory(
+        callback_context._invocation_context.session
+    )
 
 root_agent = Agent(
     name="AssessorAgent",
@@ -52,6 +57,8 @@ root_agent = Agent(
 
     Output *only* the word 'Simple' or 'Complex'.
     """,
+    tools=[load_memory],
+    after_agent_callback=auto_save_session_to_memory_callback,
     output_key="severity",
 )
 # Initialize BigQuery Analytics
