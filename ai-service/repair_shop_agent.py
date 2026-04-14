@@ -148,7 +148,7 @@ class RepairShopAgentService:
             agent=self.repair_shop_agent,
             app_name=self.reasoning_engine_id,
             session_service=session_service,
-            memory_bank_service=memory_service
+            memory_service=memory_service
         )
         user_id = "system" # internal usage
 
