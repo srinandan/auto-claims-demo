@@ -14,10 +14,13 @@
 
 import logging
 import os
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 
 def setup_telemetry() -> str | None:
     """Configure OpenTelemetry and GenAI telemetry with GCS upload."""
+    set_global_textmap(TraceContextTextMapPropagator())
     os.environ.setdefault("GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY", "true")
 
     bucket = os.environ.get("LOGS_BUCKET_NAME")

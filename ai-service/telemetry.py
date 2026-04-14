@@ -19,10 +19,13 @@ import google.auth
 from google.adk.cli.adk_web_server import _setup_instrumentation_lib_if_installed
 from google.adk.telemetry.google_cloud import get_gcp_exporters, get_gcp_resource
 from google.adk.telemetry.setup import maybe_set_otel_providers
+from opentelemetry.propagate import set_global_textmap
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 
 def setup_telemetry() -> str | None:
     """Configure OpenTelemetry and GenAI telemetry with GCS upload."""
+    set_global_textmap(TraceContextTextMapPropagator())
 
     bucket = os.environ.get("LOGS_BUCKET_NAME")
     capture_content = os.environ.get(
