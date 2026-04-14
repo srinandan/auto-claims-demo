@@ -48,6 +48,10 @@ class RepairShopAgentService:
         else:
             self.repair_shop_agent_card_url = f"{self.repair_shop_agent_url}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}" if self.repair_shop_agent_url else ""
 
+        self.httpx_client = httpx.AsyncClient(
+            auth=GoogleAuth(),
+            timeout=120.0,
+        )
         self.factory = ClientFactory(
             ClientConfig(
                 # Specify supported transport mechanisms
@@ -55,10 +59,7 @@ class RepairShopAgentService:
                 # Use client preferences for protocol negotiation
                 use_client_preference=True,
                 # Configure HTTP client with authentication            
-                httpx_client=httpx.AsyncClient(
-                    auth=GoogleAuth(),
-                    timeout=120.0
-                ),
+                httpx_client=self.httpx_client,
             )
         )
         self.reasoning_engine_id = os.getenv("SHARED_AGENT_ENGINE_ID")
@@ -90,7 +91,7 @@ class RepairShopAgentService:
         if not a2a_server_name:
             raise ValueError("RepairShopAgent not found in Agent Registry")
 
-        return self.registry.get_remote_a2a_agent(a2a_server_name)
+        return self.registry.get_remote_a2a_agent(a2a_server_name, httpx_client=self.httpx_client)
 
     async def run_repair_shop_agent(self, zip_code: str, state: str, make: str, model: str, damage_type: str) -> list:
         """
@@ -123,8 +124,8 @@ class RepairShopAgentService:
             except ImportError:
                 print("AgentRegistry could not be imported")
 
-        self.repair_shop_agent = self.get_repair_shop_agent()
-        # self.repair_shop_agent = self.get_registry_repair_shop_agent()
+        # self.repair_shop_agent = self.get_repair_shop_agent()
+        self.repair_shop_agent = self.get_registry_repair_shop_agent()
 
         session_service = VertexAiSessionService(
             project=self.project_id,
