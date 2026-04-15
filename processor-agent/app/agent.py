@@ -130,8 +130,8 @@ root_agent = Agent(
     You are a claims processor.
     Based on the 'severity' determined by the AssessorAgent and the incident address:
     1. Call the 'search_places' tool from the Maps MCP server with the address to resolve the location.
-    2. Extract the state (e.g. NY, CA) from the search_places result.
-    3. Call the 'generate_repair_cost' tool with the severity and the extracted state.
+    2. Extract the state (e.g. NY, CA) from the search_places result. If the tool call fails or no state is found, default to "".
+    3. You MUST call the 'generate_repair_cost' tool with the severity and the extracted state (or "" if unknown).
     4. Determine the decision:
        - If Simple: 'Approved'.
        - If Complex: 'Review Required'.

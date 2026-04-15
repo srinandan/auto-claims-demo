@@ -220,9 +220,11 @@ const fetchAddressSuggestions = async (query) => {
     // Parse Google Maps Grounding Lite MCP response
     if (response.data && response.data.places) {
         addressSuggestions.value = response.data.places.map(place => {
+            // Handle various possible response formats from MCP
+            const address = place.formattedAddress || place.formatted_address || (place.displayName && place.displayName.text) || place.summary || "Unknown Address"
             return {
-                formattedAddress: place.formattedAddress,
-                placeId: place.id,
+                formattedAddress: address,
+                placeId: place.id || place.placeId || place.place_id,
             }
         })
     } else {
