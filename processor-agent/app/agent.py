@@ -43,21 +43,14 @@ if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # Tool for generating mock repair costs
-def generate_repair_cost(severity: str, address: str = "") -> dict:
-    """Generates itemized repair costs based on severity and address location using Maps Grounding Lite MCP."""
-    import asyncio
-    from app.mcp_helper import lookup_address
-
-    # Run the async MCP call to get location details
-    mcp_result = asyncio.run(lookup_address(address)) if address else None
-
+def generate_repair_cost(severity: str, state: str = "") -> dict:
+    """Generates itemized repair costs based on severity and state."""
     labor_multiplier = 1.0
-    if mcp_result:
-        # Check if the text result contains NY or CA
-        mcp_result_lower = mcp_result.lower()
-        if "ny" in mcp_result_lower or "new york" in mcp_result_lower:
+    if state:
+        state_lower = state.lower()
+        if "ny" in state_lower or "new york" in state_lower:
              labor_multiplier = 1.5
-        elif "ca" in mcp_result_lower or "california" in mcp_result_lower:
+        elif "ca" in state_lower or "california" in state_lower:
              labor_multiplier = 1.3
 
     severity = severity.lower()
@@ -96,6 +89,20 @@ async def auto_save_session_to_memory_callback(callback_context):
         callback_context._invocation_context.session
     )
 
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StreamableHTTPConnectionParams
+
+# Create MCP Toolset for Google Maps Grounding Lite
+maps_mcp_params = StreamableHTTPConnectionParams(
+    url="https://mapstools.googleapis.com/mcp",
+)
+
+# If an API key is available, add it to the headers
+api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+if api_key:
+    maps_mcp_params.headers = {"x-goog-api-key": api_key}
+
+maps_toolset = McpToolset(connection_params=maps_mcp_params)
+
 # --- Agents Definition ---
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
@@ -108,9 +115,11 @@ root_agent = Agent(
     description="Generate repair cost and decision.",
     instruction="""
     You are a claims processor.
-    Based on the 'severity' determined by the AssessorAgent:
-    1. Call the 'generate_repair_cost' tool with the severity.
-    2. Determine the decision:
+    Based on the 'severity' determined by the AssessorAgent and the incident address:
+    1. Call the 'search_places' tool from the Maps MCP server with the address to resolve the location.
+    2. Extract the state (e.g. NY, CA) from the search_places result.
+    3. Call the 'generate_repair_cost' tool with the severity and the extracted state.
+    4. Determine the decision:
        - If Simple: 'Approved'.
        - If Complex: 'Review Required'.
 
@@ -127,6 +136,7 @@ root_agent = Agent(
     tools=[
         generate_repair_cost,
         load_memory,
+        maps_toolset,
     ],
     after_agent_callback=auto_save_session_to_memory_callback,
     output_key="final_result"
