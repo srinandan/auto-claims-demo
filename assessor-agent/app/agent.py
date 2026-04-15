@@ -41,9 +41,22 @@ async def auto_save_session_to_memory_callback(callback_context):
         callback_context._invocation_context.session
     )
 
+class RefreshingGemini(Gemini):
+    @property
+    def api_client(self):
+        if 'api_client' in self.__dict__:
+            del self.__dict__['api_client']
+        return super().api_client
+
+    @property
+    def _live_api_client(self):
+        if '_live_api_client' in self.__dict__:
+            del self.__dict__['_live_api_client']
+        return super()._live_api_client
+
 root_agent = Agent(
     name="AssessorAgent",
-    model=Gemini(
+    model=RefreshingGemini(
         model=os.environ.get("MODEL", "gemini-2.5-flash"),
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
