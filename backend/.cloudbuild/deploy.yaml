@@ -84,6 +84,8 @@ steps:
       - "--session-affinity"
       - "--ingress"
       - "all"
+      - "--set-secrets"
+      - "GOOGLE_MAPS_API_KEY=maps-api-key:latest"
       - "--labels=appid=auto-claims"
       - "--add-volume=name=gcs-1,type=cloud-storage,bucket=${PROJECT_ID}-auto-claims"
       - "--add-volume-mount=volume=gcs-1,mount-path=/home/nonroot/db"
