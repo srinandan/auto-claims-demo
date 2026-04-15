@@ -89,19 +89,19 @@ async def auto_save_session_to_memory_callback(callback_context):
         callback_context._invocation_context.session
     )
 
-from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StreamableHTTPConnectionParams
-
-# Create MCP Toolset for Google Maps Grounding Lite
-maps_mcp_params = StreamableHTTPConnectionParams(
-    url="https://mapstools.googleapis.com/mcp",
-)
-
-# If an API key is available, add it to the headers
-api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
-if api_key:
-    maps_mcp_params.headers = {"x-goog-api-key": api_key}
-
-maps_toolset = McpToolset(connection_params=maps_mcp_params)
+try:
+    from google.adk.integrations.agent_registry import AgentRegistry
+    registry = AgentRegistry(
+        project_id=os.environ.get("GOOGLE_CLOUD_PROJECT"),
+        location=os.environ.get("GOOGLE_CLOUD_LOCATION"),
+    )
+    servers = registry.list_mcp_servers(
+        filter_str="displayName:mapstools.googleapis.com", page_size=1
+    )
+    mcp_server_name = servers.get("mcpServers", [])[0]["name"]
+    maps_toolset = registry.get_mcp_toolset(mcp_server_name)
+except ImportError:
+    print("AgentRegistry could not be imported")
 
 # --- Agents Definition ---
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")

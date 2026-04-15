@@ -149,6 +149,7 @@ def setup_agent_identity(client: Any, project: str, display_name: str) -> Any:
         "roles/cloudapiregistry.viewer",
         "roles/logging.logWriter",
         "roles/monitoring.metricWriter",
+        "roles/secretmanager.secretAccessor",
     ]
     principal = f"principal://{agent.api_resource.spec.effective_identity}"
     click.echo(f"🔐 Granting IAM roles to: {principal}")
