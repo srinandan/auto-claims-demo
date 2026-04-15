@@ -87,6 +87,7 @@ class Detection(BaseModel):
 
 class ClaimsRequest(BaseModel):
     file_uris: List[str]
+    address: Optional[str] = ""
 
 class ClaimsProcessResponse(BaseModel):
     findings: List[str]
@@ -214,7 +215,7 @@ async def process_claims(request: ClaimsRequest):
     if MOCK_MODE:
         agent_response = mock_claims_agent_response(aggregated_findings)
     else:
-        agent_response = await claim_agent_service.run_claims_agent(aggregated_findings)
+        agent_response = await claim_agent_service.run_claims_agent(aggregated_findings, request.address)
 
     return ClaimsProcessResponse(
         findings=aggregated_findings,

@@ -463,8 +463,14 @@ func AnalyzeClaim(c *gin.Context) {
 		}
 	}
 
+	address := claim.IncidentCity
+	if claim.IncidentState != "" {
+		address = claim.IncidentCity + ", " + claim.IncidentState
+	}
+
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"file_uris": fileURIs,
+		"address":   address,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal request body: " + err.Error()})

@@ -31,38 +31,64 @@ from google.cloud import bigquery
 import os
 import google.auth
 
-_, project_id = google.auth.default()
-os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+try:
+    _, project_id = google.auth.default()
+    if project_id:
+        os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+except Exception:
+    pass
+
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
     os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # Tool for generating mock repair costs
-def generate_repair_cost(severity: str) -> dict:
-    """Generates itemized repair costs based on severity."""
+def generate_repair_cost(severity: str, address: str = "") -> dict:
+    """Generates itemized repair costs based on severity and address location using Maps Grounding Lite MCP."""
+    import asyncio
+    from app.mcp_helper import lookup_address
+
+    # Run the async MCP call to get location details
+    mcp_result = asyncio.run(lookup_address(address)) if address else None
+
+    labor_multiplier = 1.0
+    if mcp_result:
+        # Check if the text result contains NY or CA
+        mcp_result_lower = mcp_result.lower()
+        if "ny" in mcp_result_lower or "new york" in mcp_result_lower:
+             labor_multiplier = 1.5
+        elif "ca" in mcp_result_lower or "california" in mcp_result_lower:
+             labor_multiplier = 1.3
+
     severity = severity.lower()
     if "simple" in severity:
+        base_labor = 200.00
+        adjusted_labor = base_labor * labor_multiplier
+        total_parts = 500.00
         return {
             "items": [
                 {"part": "Bumper Repair", "cost": 350.00},
-                {"part": "Labor (2 hours)", "cost": 200.00},
+                {"part": "Labor (2 hours)", "cost": adjusted_labor},
                 {"part": "Paint Touch-up", "cost": 150.00}
             ],
-            "total_labor": 200.00,
-            "total_parts": 500.00,
-            "total_cost": 700.00
+            "total_labor": adjusted_labor,
+            "total_parts": total_parts,
+            "total_cost": adjusted_labor + total_parts
         }
     else: # Complex
+        base_labor = 1000.00
+        adjusted_labor = base_labor * labor_multiplier
+        total_parts = 3500.00
         return {
             "items": [
                 {"part": "Fender Replacement", "cost": 1200.00},
                 {"part": "Door Panel Repair", "cost": 800.00},
-                {"part": "Labor (10 hours)", "cost": 1000.00},
+                {"part": "Labor (10 hours)", "cost": adjusted_labor},
                 {"part": "Painting & Blending", "cost": 1500.00}
             ],
-            "total_labor": 1000.00,
-            "total_parts": 3500.00,
-            "total_cost": 4500.00
+            "total_labor": adjusted_labor,
+            "total_parts": total_parts,
+            "total_cost": adjusted_labor + total_parts
         }
 
 async def auto_save_session_to_memory_callback(callback_context):

@@ -58,16 +58,31 @@
                     />
                     <p class="text-[10px] text-on-surface-variant font-body">An estimate is fine if exact time is unknown.</p>
                   </div>
-                  <div class="md:col-span-2 flex flex-col space-y-2">
+                  <div class="md:col-span-2 flex flex-col space-y-2 relative">
                     <label class="text-xs font-bold uppercase tracking-widest text-secondary font-label">Location</label>
                     <div class="relative">
                         <input
+                          v-model="form.location"
+                          @input="onLocationInput"
                           type="text"
                           placeholder="Street, City, State"
+                          required
                           class="w-full bg-surface-container-lowest border-none ring-1 ring-outline-variant/15 focus:ring-2 focus:ring-primary p-4 pl-12 rounded-md outline-none transition-all font-body"
                         />
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-secondary">location_on</span>
                     </div>
+
+                    <!-- Address Suggestions Dropdown -->
+                    <ul v-if="addressSuggestions.length > 0" class="absolute top-full left-0 right-0 mt-1 bg-surface-container-lowest border border-outline-variant/15 rounded-md shadow-lg z-10 max-h-60 overflow-y-auto">
+                        <li
+                            v-for="(suggestion, index) in addressSuggestions"
+                            :key="index"
+                            @click="selectAddress(suggestion)"
+                            class="p-3 hover:bg-surface-container-low cursor-pointer font-body text-sm border-b border-outline-variant/10 last:border-0"
+                        >
+                            {{ suggestion.formattedAddress }}
+                        </li>
+                    </ul>
                   </div>
               </div>
             </div>
@@ -181,14 +196,55 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const user = ref(null)
 const submitting = ref(false)
+const addressSuggestions = ref([])
+let debounceTimeout = null
 
 const form = reactive({
   policyNumber: '',
   customerName: '',
   date: '',
   description: '',
+  location: '',
   photos: []
 })
+
+const fetchAddressSuggestions = async (query) => {
+  if (!query || query.length < 3) {
+    addressSuggestions.value = []
+    return
+  }
+
+  try {
+    const response = await axios.post('/api/resolve-address', { address: query })
+
+    // Parse Google Maps Grounding Lite MCP response
+    if (response.data && response.data.places) {
+        addressSuggestions.value = response.data.places.map(place => {
+            return {
+                formattedAddress: place.formattedAddress,
+                placeId: place.id,
+            }
+        })
+    } else {
+        addressSuggestions.value = []
+    }
+  } catch (error) {
+    console.error('Error fetching address suggestions:', error)
+    addressSuggestions.value = []
+  }
+}
+
+const onLocationInput = () => {
+  clearTimeout(debounceTimeout)
+  debounceTimeout = setTimeout(() => {
+    fetchAddressSuggestions(form.location)
+  }, 300)
+}
+
+const selectAddress = (suggestion) => {
+  form.location = suggestion.formattedAddress
+  addressSuggestions.value = []
+}
 
 const handleFileUpload = (event) => {
   form.photos = Array.from(event.target.files)
@@ -201,6 +257,9 @@ const submitClaim = async () => {
   formData.append('customer_name', form.customerName)
   formData.append('accident_date', form.date)
   formData.append('description', form.description)
+  // We send the full location as incident_city to avoid DB schema changes,
+  // or we can just send it and let the backend save it.
+  formData.append('incident_city', form.location)
 
   form.photos.forEach(photo => {
     formData.append('files', photo)

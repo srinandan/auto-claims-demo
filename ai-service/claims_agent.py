@@ -116,9 +116,9 @@ class ClaimAgentService:
         return self.registry.get_remote_a2a_agent(a2a_server_name, httpx_client=self.httpx_client)
 
     # Helper to run the agent
-    async def run_claims_agent(self, findings: list[str]) -> dict:
+    async def run_claims_agent(self, findings: list[str], address: str = "") -> dict:
         """
-        Runs the sequential agent with the provided findings.
+        Runs the sequential agent with the provided findings and address.
         Returns the final result dictionary.
         """
 
@@ -171,6 +171,8 @@ class ClaimAgentService:
         # Prepare input text
         findings_text = "\n".join([f"- {f}" for f in findings])
         prompt_text = f"Here are the damage findings from the vehicle images:\n{findings_text}\n\nPlease assess and process this claim."
+        if address:
+             prompt_text += f"\n\nThe incident occurred at: {address}."
 
         # Create Content object
         prompt_content = Content(parts=[Part(text=prompt_text)])
