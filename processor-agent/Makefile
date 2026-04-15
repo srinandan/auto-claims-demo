@@ -7,6 +7,7 @@ BQ_ANALYTICS_DATASET_LOCATION="US"
 PORT ?= 8082
 REASONING_ENGINE_ID ?= 4554265123178414080
 SHARED_AGENT_ENGINE_ID ?= 3064462601669836800
+GOOGLE_MAPS_API_KEY= $(shell gcloud secrets versions access latest --secret="google-maps-api-key")
 
 .PHONY: local deploy
 
@@ -45,6 +46,7 @@ deploy:
 	export OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT} ;\
 	export REASONING_ENGINE_ID=${REASONING_ENGINE_ID} ;\
 	export SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID} ;\
+	export GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY} ;\
 	(uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > app/app_utils/.requirements.txt 2>/dev/null || \
 	uv export --no-hashes --no-header --no-dev --no-emit-project > app/app_utils/.requirements.txt) && \
 	uv run -m app.app_utils.deploy \
@@ -53,6 +55,5 @@ deploy:
 		--entrypoint-object=agent_engine \
 		--location=${REGION} \
 		--agent-identity \
-		--set-env-vars=GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES=false,OTEL_SERVICE_NAME=auto-claims-processor-agent,OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true,REASONING_ENGINE_ID=${REASONING_ENGINE_ID},SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true,BQ_ANALYTICS_DATASET_LOCATION=${BQ_ANALYTICS_DATASET_LOCATION} \
-		--set-secrets=GOOGLE_MAPS_API_KEY=maps-api-key \
+		--set-env-vars=GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY},GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES=false,OTEL_SERVICE_NAME=auto-claims-processor-agent,OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true,REASONING_ENGINE_ID=${REASONING_ENGINE_ID},SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true,BQ_ANALYTICS_DATASET_LOCATION=${BQ_ANALYTICS_DATASET_LOCATION} \
 		--requirements-file=app/app_utils/.requirements.txt
