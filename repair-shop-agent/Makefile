@@ -7,6 +7,7 @@ BQ_ANALYTICS_DATASET_LOCATION="US"
 PORT ?= 8083
 REASONING_ENGINE_ID ?= 109405805010223104
 SHARED_AGENT_ENGINE_ID ?= 3064462601669836800
+AGENT_GATEWAY ?= agent-gw-egress
 
 .PHONY: local deploy
 
@@ -44,6 +45,7 @@ deploy:
 	export OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT} ;\
 	export REASONING_ENGINE_ID=${REASONING_ENGINE_ID} ;\
 	export SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID} ;\
+	export AGENT_GATEWAY=${AGENT_GATEWAY} ;\
 	(uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > app/app_utils/.requirements.txt 2>/dev/null || \
 	uv export --no-hashes --no-header --no-dev --no-emit-project > app/app_utils/.requirements.txt) && \
 	uv run -m app.app_utils.deploy \

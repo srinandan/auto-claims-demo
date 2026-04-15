@@ -3,9 +3,11 @@ package handlers
 import (
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type headerTransport struct {
@@ -44,13 +46,17 @@ func ResolveAddress(c *gin.Context) {
 	var customClient *http.Client
 	if apiKey != "" {
 		customClient = &http.Client{
-			Transport: &headerTransport{
+			Transport: otelhttp.NewTransport(&headerTransport{
 				base:   http.DefaultTransport,
 				header: http.Header{"x-goog-api-key": []string{apiKey}},
-			},
+			}),
+			Timeout: 120 * time.Second,
 		}
 	} else {
-		customClient = http.DefaultClient
+		customClient = &http.Client{
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+			Timeout:   120 * time.Second, // 2 minute timeout for AI operations
+		}
 	}
 
 	transport := &mcp.StreamableClientTransport{
