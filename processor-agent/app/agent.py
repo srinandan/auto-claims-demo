@@ -106,9 +106,22 @@ maps_toolset = McpToolset(connection_params=maps_mcp_params)
 # --- Agents Definition ---
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
+class RefreshingGemini(Gemini):
+    @property
+    def api_client(self):
+        if 'api_client' in self.__dict__:
+            del self.__dict__['api_client']
+        return super().api_client
+
+    @property
+    def _live_api_client(self):
+        if '_live_api_client' in self.__dict__:
+            del self.__dict__['_live_api_client']
+        return super()._live_api_client
+
 root_agent = Agent(
     name="ProcessorAgent",
-    model=Gemini(
+    model=RefreshingGemini(
         model=MODEL_NAME,
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
