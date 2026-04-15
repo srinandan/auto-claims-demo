@@ -98,7 +98,8 @@ try:
     servers = registry.list_mcp_servers(
         filter_str="displayName:mapstools.googleapis.com", page_size=1
     )
-    maps_mcp_name = servers.get("mcpServers", [])[0]["name"]
+    mcp_server_name = servers.get("mcpServers", [])[0]["name"]
+    mcp_toolset = registry.get_mcp_toolset(mcp_server_name)
 except ImportError:
     print("AgentRegistry could not be imported")
 
