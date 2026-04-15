@@ -218,10 +218,22 @@ const fetchAddressSuggestions = async (query) => {
     const response = await axios.post('/api/resolve-address', { address: query })
 
     // Parse Google Maps Grounding Lite MCP response
-    if (response.data && response.data.places) {
+    if (response.data && response.data.summary) {
+        let addressStr = response.data.summary;
+        // Clean up markdown bold markers and reference tags like [0]
+        addressStr = addressStr.replace(/\*\*/g, '').replace(/\s*\[\d+\]/g, '');
+
+        const placeId = (response.data.places && response.data.places.length > 0) ?
+            (response.data.places[0].id || response.data.places[0].placeId || response.data.places[0].place_id) : null;
+
+        addressSuggestions.value = [{
+            formattedAddress: addressStr,
+            placeId: placeId,
+        }];
+    } else if (response.data && response.data.places) {
         addressSuggestions.value = response.data.places.map(place => {
-            // Handle various possible response formats from MCP
-            const address = place.formattedAddress || place.formatted_address || (place.displayName && place.displayName.text) || place.summary || "Unknown Address"
+            // Fallback for different format if summary is not present
+            const address = place.formattedAddress || place.formatted_address || (place.displayName && place.displayName.text) || "Unknown Address"
             return {
                 formattedAddress: address,
                 placeId: place.id || place.placeId || place.place_id,
