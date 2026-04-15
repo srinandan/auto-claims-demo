@@ -90,6 +90,7 @@ func main() {
 		api.POST("/claims/:id/repair-shops", handlers.FindRepairShops)
 		api.POST("/claims/:id/book-appointment", handlers.BookAppointment)
 		api.GET("/policies/:number", handlers.GetPolicy)
+		api.POST("/resolve-address", handlers.ResolveAddress)
 	}
 
 	r.Run(fmt.Sprintf(":%s", PORT))

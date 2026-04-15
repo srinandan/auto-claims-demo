@@ -31,38 +31,57 @@ from google.cloud import bigquery
 import os
 import google.auth
 
-_, project_id = google.auth.default()
-os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+try:
+    _, project_id = google.auth.default()
+    if project_id:
+        os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+except Exception:
+    pass
+
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
     os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 # Tool for generating mock repair costs
-def generate_repair_cost(severity: str) -> dict:
-    """Generates itemized repair costs based on severity."""
+def generate_repair_cost(severity: str, state: str = "") -> dict:
+    """Generates itemized repair costs based on severity and state."""
+    labor_multiplier = 1.0
+    if state:
+        state_lower = state.lower()
+        if "ny" in state_lower or "new york" in state_lower:
+             labor_multiplier = 1.5
+        elif "ca" in state_lower or "california" in state_lower:
+             labor_multiplier = 1.3
+
     severity = severity.lower()
     if "simple" in severity:
+        base_labor = 200.00
+        adjusted_labor = base_labor * labor_multiplier
+        total_parts = 500.00
         return {
             "items": [
                 {"part": "Bumper Repair", "cost": 350.00},
-                {"part": "Labor (2 hours)", "cost": 200.00},
+                {"part": "Labor (2 hours)", "cost": adjusted_labor},
                 {"part": "Paint Touch-up", "cost": 150.00}
             ],
-            "total_labor": 200.00,
-            "total_parts": 500.00,
-            "total_cost": 700.00
+            "total_labor": adjusted_labor,
+            "total_parts": total_parts,
+            "total_cost": adjusted_labor + total_parts
         }
     else: # Complex
+        base_labor = 1000.00
+        adjusted_labor = base_labor * labor_multiplier
+        total_parts = 3500.00
         return {
             "items": [
                 {"part": "Fender Replacement", "cost": 1200.00},
                 {"part": "Door Panel Repair", "cost": 800.00},
-                {"part": "Labor (10 hours)", "cost": 1000.00},
+                {"part": "Labor (10 hours)", "cost": adjusted_labor},
                 {"part": "Painting & Blending", "cost": 1500.00}
             ],
-            "total_labor": 1000.00,
-            "total_parts": 3500.00,
-            "total_cost": 4500.00
+            "total_labor": adjusted_labor,
+            "total_parts": total_parts,
+            "total_cost": adjusted_labor + total_parts
         }
 
 async def auto_save_session_to_memory_callback(callback_context):
@@ -70,21 +89,50 @@ async def auto_save_session_to_memory_callback(callback_context):
         callback_context._invocation_context.session
     )
 
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StreamableHTTPConnectionParams
+
+# Create MCP Toolset for Google Maps Grounding Lite
+maps_mcp_params = StreamableHTTPConnectionParams(
+    url="https://mapstools.googleapis.com/mcp",
+)
+
+# If an API key is available, add it to the headers
+api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+if api_key:
+    maps_mcp_params.headers = {"x-goog-api-key": api_key}
+
+maps_toolset = McpToolset(connection_params=maps_mcp_params)
+
 # --- Agents Definition ---
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
+class RefreshingGemini(Gemini):
+    @property
+    def api_client(self):
+        if 'api_client' in self.__dict__:
+            del self.__dict__['api_client']
+        return super().api_client
+
+    @property
+    def _live_api_client(self):
+        if '_live_api_client' in self.__dict__:
+            del self.__dict__['_live_api_client']
+        return super()._live_api_client
+
 root_agent = Agent(
     name="ProcessorAgent",
-    model=Gemini(
+    model=RefreshingGemini(
         model=MODEL_NAME,
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     description="Generate repair cost and decision.",
     instruction="""
     You are a claims processor.
-    Based on the 'severity' determined by the AssessorAgent:
-    1. Call the 'generate_repair_cost' tool with the severity.
-    2. Determine the decision:
+    Based on the 'severity' determined by the AssessorAgent and the incident address:
+    1. Call the 'search_places' tool from the Maps MCP server with the address to resolve the location.
+    2. Extract the state (e.g. NY, CA) from the search_places result. If the tool call fails or no state is found, default to "".
+    3. You MUST call the 'generate_repair_cost' tool with the severity and the extracted state (or "" if unknown).
+    4. Determine the decision:
        - If Simple: 'Approved'.
        - If Complex: 'Review Required'.
 
@@ -101,6 +149,7 @@ root_agent = Agent(
     tools=[
         generate_repair_cost,
         load_memory,
+        maps_toolset,
     ],
     after_agent_callback=auto_save_session_to_memory_callback,
     output_key="final_result"
