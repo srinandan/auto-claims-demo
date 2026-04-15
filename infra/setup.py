@@ -46,7 +46,8 @@ def setup_infrastructure():
 
     # Define resource names
     buckets = [
-        f"gs://{project_id}-auto-claims"
+        f"gs://{project_id}-auto-claims",
+        f"gs://{project_id}-agent-logs"
     ]
 
     print(f"Using Project ID: {project_id}")
@@ -66,6 +67,7 @@ def setup_infrastructure():
         "cloudbuild.googleapis.com",
         "cloudtrace.googleapis.com",
         "bigquery.googleapis.com",
+        "bigqueryconnection.googleapis.com",
         "secretmanager.googleapis.com",
         "compute.googleapis.com",
         "apphub.googleapis.com",
@@ -158,6 +160,32 @@ def setup_infrastructure():
         run_command(f"bq mk --location={location} -d {project_id}:{bq_dataset}")
     else:
         print(f"BigQuery dataset {bq_dataset} already exists.")
+
+    # 7.5 Create BigQuery Connection
+    print("\n--- Creating BigQuery Connection ---")
+    bq_connection_id = "adk-analytics-connection"
+    connection_check = run_command(f"bq show --connection --project_id={project_id} --location={location} {bq_connection_id}", ignore_errors=True)
+    if "Not found" in connection_check or not connection_check:
+        print(f"Creating BigQuery connection: {bq_connection_id}...")
+        run_command(f"bq mk --connection --location={location} --project_id={project_id} --connection_type=CLOUD_RESOURCE {bq_connection_id}")
+    else:
+        print(f"BigQuery connection {bq_connection_id} already exists.")
+
+    print(f"Extracting service account for BigQuery connection {bq_connection_id}...")
+    bq_sa_output = run_command(f"bq show --connection --format=json --project_id={project_id} --location={location} {bq_connection_id}", ignore_errors=True)
+    import json
+    try:
+        bq_sa_json = json.loads(bq_sa_output)
+        bq_sa = bq_sa_json.get("cloudResource", {}).get("serviceAccountId")
+        if bq_sa:
+            print(f"Granting BigQuery connection service account {bq_sa} access to the project...")
+            run_command(f"gcloud projects add-iam-policy-binding {project_id} --member=serviceAccount:{bq_sa} --role=roles/storage.objectViewer > /dev/null", ignore_errors=True)
+            run_command(f"gcloud projects add-iam-policy-binding {project_id} --member=serviceAccount:{bq_sa} --role=roles/storage.objectCreator > /dev/null", ignore_errors=True)
+            run_command(f"gcloud projects add-iam-policy-binding {project_id} --member=serviceAccount:{bq_sa} --role=roles/storage.admin > /dev/null", ignore_errors=True)
+        else:
+            print(f"Warning: Could not parse service account from BigQuery connection {bq_connection_id}.")
+    except Exception as e:
+        print(f"Warning: Failed to parse BigQuery connection JSON: {e}")
 
     # 8. Create Cloud Build Worker Pool
     print("\n--- Creating Cloud Build Worker Pool ---")
