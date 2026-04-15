@@ -44,22 +44,9 @@ async def auto_save_session_to_memory_callback(callback_context):
 # Repair Shop Agent Definition
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
 
-class RefreshingGemini(Gemini):
-    @property
-    def api_client(self):
-        if 'api_client' in self.__dict__:
-            del self.__dict__['api_client']
-        return super().api_client
-
-    @property
-    def _live_api_client(self):
-        if '_live_api_client' in self.__dict__:
-            del self.__dict__['_live_api_client']
-        return super()._live_api_client
-
 root_agent = Agent(
     name="RepairShopAgent",
-    model=RefreshingGemini(model=MODEL_NAME),
+    model=MODEL_NAME,
     description="Finds local auto repair shops using Google Search.",
     instruction="""
     You are an expert assistant helping users find auto repair shops.

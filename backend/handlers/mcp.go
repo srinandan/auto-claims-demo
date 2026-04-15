@@ -67,7 +67,7 @@ func ResolveAddress(c *gin.Context) {
 
 	result, err := cs.CallTool(c.Request.Context(), &mcp.CallToolParams{
 		Name:      "search_places",
-		Arguments: map[string]any{"text_query": reqBody.Address},
+		Arguments: map[string]any{"textQuery": reqBody.Address},
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to call MCP tool: " + err.Error()})
