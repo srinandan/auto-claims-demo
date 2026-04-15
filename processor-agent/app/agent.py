@@ -93,8 +93,7 @@ def header_provider(context=None):
     from opentelemetry.propagate import inject
     otel_headers = {}
     inject(otel_headers)
-    headers.update(otel_headers)
-    return headers
+    return otel_headers
 
 try:
     from google.adk.integrations.agent_registry import AgentRegistry
