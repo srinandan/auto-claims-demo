@@ -89,11 +89,18 @@ async def auto_save_session_to_memory_callback(callback_context):
         callback_context._invocation_context.session
     )
 
+def header_provider(context=None):
+    from opentelemetry.propagate import inject
+    otel_headers = {}
+    inject(otel_headers)
+    return otel_headers
+
 try:
     from google.adk.integrations.agent_registry import AgentRegistry
     registry = AgentRegistry(
         project_id=os.environ.get("GOOGLE_CLOUD_PROJECT"),
-        location=os.environ.get("GOOGLE_CLOUD_LOCATION"),
+        location="global",
+        header_provider=header_provider,
     )
     servers = registry.list_mcp_servers(
         filter_str="displayName:mapstools.googleapis.com", page_size=1

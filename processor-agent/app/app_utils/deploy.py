@@ -150,6 +150,7 @@ def setup_agent_identity(client: Any, project: str, display_name: str) -> Any:
         "roles/logging.logWriter",
         "roles/monitoring.metricWriter",
         "roles/secretmanager.secretAccessor",
+        "roles/agentRegistry.viewer",
     ]
     principal = f"principal://{agent.api_resource.spec.effective_identity}"
     click.echo(f"🔐 Granting IAM roles to: {principal}")
@@ -270,6 +271,11 @@ def setup_agent_identity(client: Any, project: str, display_name: str) -> Any:
     default=False,
     help="Enable agent identity for per-agent IAM access control (Preview feature)",
 )
+@click.option(
+    "--agent-gateway",
+    default=None,
+    help="Agent Gateway Name",
+)
 def deploy_agent_engine_app(
     project: str | None,
     location: str,
@@ -290,6 +296,7 @@ def deploy_agent_engine_app(
     container_concurrency: int,
     num_workers: int,
     agent_identity: bool,
+    agent_gateway: str | None,
 ) -> AgentEngine:
     """Deploy the agent engine app to Vertex AI."""
 
@@ -372,23 +379,28 @@ def deploy_agent_engine_app(
     # Generate class methods spec from register_operations
     class_methods_list = generate_class_methods_from_agent(agent_instance)
 
-    config = AgentEngineConfig(
-        display_name=display_name,
-        description=description,
-        source_packages=source_packages_list,
-        entrypoint_module=entrypoint_module,
-        entrypoint_object=entrypoint_object,
-        class_methods=class_methods_list,
-        env_vars=env_vars,
-        service_account=service_account,
-        requirements_file=requirements_file,
-        labels=labels_dict,
-        min_instances=min_instances,
-        max_instances=max_instances,
-        resource_limits={"cpu": cpu, "memory": memory},
-        container_concurrency=container_concurrency,
-        identity_type=IdentityType.AGENT_IDENTITY if agent_identity else None,
-    )
+    config_args = {
+        "display_name": display_name,
+        "description": description,
+        "source_packages": source_packages_list,
+        "entrypoint_module": entrypoint_module,
+        "entrypoint_object": entrypoint_object,
+        "class_methods": class_methods_list,
+        "env_vars": env_vars,
+        "service_account": service_account,
+        "requirements_file": requirements_file,
+        "labels": labels_dict,
+        "min_instances": min_instances,
+        "max_instances": max_instances,
+        "resource_limits": {"cpu": cpu, "memory": memory},
+        "container_concurrency": container_concurrency,
+        "identity_type": IdentityType.AGENT_IDENTITY if agent_identity else None,
+    }
+    if agent_gateway:
+        config_args["agent_gateway_config"] = {
+            "agent_to_anywhere_config": {"agent_gateway": f"projects/{project}/locations/{location}/agentGateways/{agent_gateway}"},
+        }
+    config = AgentEngineConfig(**config_args)
 
     # Check if an agent with this name already exists
     existing_agents = list(client.agent_engines.list())

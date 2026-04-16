@@ -7,6 +7,7 @@ BQ_ANALYTICS_DATASET_LOCATION="US"
 PORT ?= 8081
 REASONING_ENGINE_ID ?= 3024167149779288064
 SHARED_AGENT_ENGINE_ID ?= 3064462601669836800
+AGENT_GATEWAY ?= agent-gw-egress
 
 .PHONY: local deploy
 
@@ -44,6 +45,7 @@ deploy:
 	export OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT} ;\
 	export REASONING_ENGINE_ID=${REASONING_ENGINE_ID} ;\
 	export SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID} ;\
+	export AGENT_GATEWAY=${AGENT_GATEWAY} ;\
 	(uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > app/app_utils/.requirements.txt 2>/dev/null || \
 	uv export --no-hashes --no-header --no-dev --no-emit-project > app/app_utils/.requirements.txt) && \
 	uv run -m app.app_utils.deploy \
@@ -52,6 +54,7 @@ deploy:
 		--entrypoint-object=agent_engine \
 		--location=${REGION} \
 		--agent-identity \
+		--agent-gateway=${AGENT_GATEWAY} \
 		--set-env-vars=GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES=false,OTEL_SERVICE_NAME=auto-claims-assessor-agent,OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true,REASONING_ENGINE_ID=${REASONING_ENGINE_ID},SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true,BQ_ANALYTICS_DATASET_LOCATION=${BQ_ANALYTICS_DATASET_LOCATION} \
 		--requirements-file=app/app_utils/.requirements.txt
 

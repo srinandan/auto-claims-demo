@@ -58,7 +58,7 @@ func InitTelemetry(ctx context.Context, projectID, serviceName string) (func(con
 		),
 	)
 	if err != nil &&
-	 !errors.Is(err, resource.ErrPartialResource) && !errors.Is(err, resource.ErrSchemaURLConflict) {
+		!errors.Is(err, resource.ErrPartialResource) && !errors.Is(err, resource.ErrSchemaURLConflict) {
 		return nil, fmt.Errorf("failed to create resource: %w", err)
 	} else if err != nil {
 		slog.WarnContext(ctx, "partial resource detected; some attributes may be missing", "error", err)
