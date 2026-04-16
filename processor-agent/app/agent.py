@@ -17,6 +17,8 @@ import datetime
 from zoneinfo import ZoneInfo
 
 from google.adk.agents import Agent
+from google.adk.tools.mcp_tool import McpToolset
+from google.adk.tools.mcp_tool.mcp_session_manager import StreamableHTTPConnectionParams
 from google.adk.apps import App
 from google.adk.models import Gemini
 from google.adk.tools import LongRunningFunctionTool, load_memory
@@ -35,12 +37,16 @@ try:
     _, project_id = google.auth.default()
     if project_id:
         os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+        os.environ["GOOGLE_CLOUD_QUOTA_PROJECT"] = project_id
 except Exception:
     pass
 
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
     os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+
+if not os.environ.get("GOOGLE_MAPS_API_KEY"):
+    raise ValueError("GOOGLE_MAPS_API_KEY environment variable is not set. Please ensure it is provided.")
 
 # Tool for generating mock repair costs
 def generate_repair_cost(severity: str, state: str = "") -> dict:
@@ -90,25 +96,60 @@ async def auto_save_session_to_memory_callback(callback_context):
     )
 
 def header_provider(context=None):
+    import os
     from opentelemetry.propagate import inject
+
+    headers = {}
+    api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
+    print(f"DEBUG: header_provider - GOOGLE_MAPS_API_KEY is set: {bool(api_key)}")
+    if api_key:
+        headers["x-goog-api-key"] = api_key
+
     otel_headers = {}
     inject(otel_headers)
-    return otel_headers
+    headers.update(otel_headers)
+    return headers
 
-try:
-    from google.adk.integrations.agent_registry import AgentRegistry
-    registry = AgentRegistry(
-        project_id=os.environ.get("GOOGLE_CLOUD_PROJECT"),
-        location="global",
-        header_provider=header_provider,
-    )
-    servers = registry.list_mcp_servers(
-        filter_str="displayName:mapstools.googleapis.com", page_size=1
-    )
-    mcp_server_name = servers.get("mcpServers", [])[0]["name"]
-    maps_toolset = registry.get_mcp_toolset(mcp_server_name)
-except ImportError:
-    print("AgentRegistry could not be imported")
+def get_maps_toolset() -> McpToolset:
+    from opentelemetry.propagate import inject
+
+    headers = {
+        "X-Goog-Api-Key": os.environ.get("GOOGLE_MAPS_API_KEY"),
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream"
+    }
+
+    otel_headers = {}
+    inject(otel_headers)
+    headers.update(otel_headers)
+
+    return McpToolset(
+            connection_params=StreamableHTTPConnectionParams(
+                url="https://mapstools.googleapis.com/mcp",
+                headers=headers
+            )
+        )
+
+def get_registry_maps_toolset() -> McpToolset:
+    try:
+        from google.adk.integrations.agent_registry import AgentRegistry
+        registry = AgentRegistry(
+            project_id=os.environ.get("GOOGLE_CLOUD_PROJECT"),
+            location="global",
+            header_provider=header_provider,
+        )
+        servers = registry.list_mcp_servers(
+            filter_str="displayName:mapstools.googleapis.com", page_size=1
+        )
+        mcp_server_name = servers.get("mcpServers", [])[0]["name"]
+        maps_toolset = registry.get_mcp_toolset(mcp_server_name)
+        return maps_toolset
+    except ImportError:
+        print("AgentRegistry could not be imported")
+        return None
+    except Exception as e:
+        print(f"Error getting maps toolset: {e}")
+        return None
 
 # --- Agents Definition ---
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
@@ -156,7 +197,8 @@ root_agent = Agent(
     tools=[
         generate_repair_cost,
         load_memory,
-        maps_toolset,
+        get_maps_toolset(),
+        # get_registry_maps_toolset()
     ],
     after_agent_callback=auto_save_session_to_memory_callback,
     output_key="final_result"
