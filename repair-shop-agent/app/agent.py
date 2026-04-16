@@ -29,7 +29,7 @@ from google.adk.plugins.bigquery_agent_analytics_plugin import (
 from google.cloud import bigquery
 
 import os
-from google import auth
+import google.auth
 
 try:
     _, project_id = google.auth.default()
