@@ -13,21 +13,17 @@
 # limitations under the License.
 
 import os
-from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from google.adk.sessions import VertexAiSessionService
 from google.adk.memory import VertexAiMemoryBankService
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents import SequentialAgent
 from google.adk.runners import Runner
 from google.genai.types import Content, Part
 import json
-import uuid
 import re
 import httpx
 from a2a.client import ClientConfig, ClientFactory
 from a2a.types import TransportProtocol
-from google.auth.transport.requests import Request
-from google.auth import default
 
 factory = None
 
@@ -116,7 +112,7 @@ class ClaimAgentService:
         return self.registry.get_remote_a2a_agent(a2a_server_name, httpx_client=self.httpx_client)
 
     # Helper to run the agent
-    async def run_claims_agent(self, findings: list[str], address: str = "") -> dict:
+    async def run_claims_agent(self, findings: list[str], address: str = "", user_id: str = "system") -> dict:
         """
         Runs the sequential agent with the provided findings and address.
         Returns the final result dictionary.
@@ -183,7 +179,6 @@ class ClaimAgentService:
             session_service=session_service,
             memory_service=memory_service,
         )
-        user_id = "system" # internal usage
 
         session = await session_service.create_session(
            app_name=self.reasoning_engine_id,

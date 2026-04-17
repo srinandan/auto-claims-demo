@@ -12,12 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.adk.agents import LlmAgent
-from google.adk.runners import InMemoryRunner
-from google.adk.tools import google_search
 from google.genai.types import Content, Part
 import json
-import uuid
 import re
 import httpx
 import os
@@ -28,8 +24,6 @@ from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from a2a.client import ClientConfig, ClientFactory
 from a2a.types import TransportProtocol
-from google.auth.transport.requests import Request
-from google.auth import default
 
 
 
@@ -93,7 +87,7 @@ class RepairShopAgentService:
 
         return self.registry.get_remote_a2a_agent(a2a_server_name, httpx_client=self.httpx_client)
 
-    async def run_repair_shop_agent(self, zip_code: str, state: str, make: str, model: str, damage_type: str) -> list:
+    async def run_repair_shop_agent(self, zip_code: str, state: str, make: str, model: str, damage_type: str, user_id: str = "system") -> list:
         """
         Runs the repair shop agent to find shops.
         Returns a list of shop dictionaries.
@@ -151,7 +145,6 @@ class RepairShopAgentService:
             session_service=session_service,
             memory_service=memory_service
         )
-        user_id = "system" # internal usage
 
         final_text = ""
 
@@ -203,7 +196,6 @@ class RepairShopAgentService:
 
 repair_shop_agent_service = RepairShopAgentService()
 
-import json
 
 def get_auto_shops_list():
     """

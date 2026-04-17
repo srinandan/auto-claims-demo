@@ -20,8 +20,6 @@ from google.adk.plugins.bigquery_agent_analytics_plugin import (
     BigQueryLoggerConfig,
 )
 from google.cloud import bigquery
-import json
-import asyncio
 import os
 import logging
 
@@ -97,7 +95,7 @@ appointment_agent = LlmAgent(
 # Key: session_id, Value: InMemoryRunner instance
 sessions = {}
 
-async def run_appointment_agent(session_id: str, user_message: str, context: dict = None) -> str:
+async def run_appointment_agent(session_id: str, user_message: str, context: dict = None, user_id: str = "user") -> str:
     """
     Runs the appointment agent for a given session.
 
@@ -145,7 +143,6 @@ async def run_appointment_agent(session_id: str, user_message: str, context: dic
             user_message = f"{initial_context}\n\nUser: {user_message}"
 
     runner = sessions[session_id]
-    user_id = "user" # Simple user ID for now
 
     # Construct content
     prompt_content = Content(parts=[Part(text=user_message)])

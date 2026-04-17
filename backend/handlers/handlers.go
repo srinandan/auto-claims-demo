@@ -155,11 +155,12 @@ func FindRepairShops(c *gin.Context) {
 	}
 
 	reqBody := map[string]string{
-		"zip_code":    fmt.Sprintf("%d", policy.InsuredZip),
-		"state":       policy.PolicyState,
-		"make":        policy.AutoMake,
-		"model":       policy.AutoModel,
-		"damage_type": damageType,
+		"zip_code":      fmt.Sprintf("%d", policy.InsuredZip),
+		"state":         policy.PolicyState,
+		"make":          policy.AutoMake,
+		"model":         policy.AutoModel,
+		"damage_type":   damageType,
+		"policy_number": claim.PolicyNumber,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -230,9 +231,10 @@ func BookAppointment(c *gin.Context) {
 	}
 
 	reqBody := map[string]interface{}{
-		"session_id": input.SessionID,
-		"message":    input.Message,
-		"context":    contextMap,
+		"session_id":    input.SessionID,
+		"message":       input.Message,
+		"context":       contextMap,
+		"policy_number": claim.PolicyNumber,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -469,8 +471,9 @@ func AnalyzeClaim(c *gin.Context) {
 	}
 
 	requestBody, err := json.Marshal(map[string]interface{}{
-		"file_uris": fileURIs,
-		"address":   address,
+		"file_uris":     fileURIs,
+		"address":       address,
+		"policy_number": claim.PolicyNumber,
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal request body: " + err.Error()})

@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import os
-import json
-import base64
 from typing import List, Dict, Any, Optional
 from google.cloud import storage
-import io
 
 # Local imports
 from claims_agent import claim_agent_service
@@ -88,6 +85,7 @@ class Detection(BaseModel):
 class ClaimsRequest(BaseModel):
     file_uris: List[str]
     address: Optional[str] = ""
+    policy_number: str
 
 class ClaimsProcessResponse(BaseModel):
     findings: List[str]
@@ -100,6 +98,7 @@ class RepairShopRequest(BaseModel):
     make: str
     model: str
     damage_type: str
+    policy_number: str
 
 class RepairShopResponse(BaseModel):
     shops: List[Dict[str, Any]]
@@ -108,6 +107,7 @@ class AppointmentRequest(BaseModel):
     session_id: str
     message: str
     context: Optional[Dict[str, Any]] = None
+    policy_number: str
 
 class AppointmentResponse(BaseModel):
     agent_message: str
@@ -216,7 +216,7 @@ async def process_claims(request: ClaimsRequest):
     if MOCK_MODE:
         agent_response = mock_claims_agent_response(aggregated_findings)
     else:
-        agent_response = await claim_agent_service.run_claims_agent(aggregated_findings, request.address)
+        agent_response = await claim_agent_service.run_claims_agent(aggregated_findings, request.address, user_id=request.policy_number)
 
     return ClaimsProcessResponse(
         findings=aggregated_findings,
@@ -236,7 +236,8 @@ async def find_repair_shops(request: RepairShopRequest):
         request.state,
         request.make,
         request.model,
-        request.damage_type
+        request.damage_type,
+        user_id=request.policy_number
     )
     return RepairShopResponse(shops=shops)
 
@@ -247,7 +248,8 @@ async def book_appointment(request: AppointmentRequest):
     response = await run_appointment_agent(
         request.session_id,
         request.message,
-        request.context
+        request.context,
+        user_id=request.policy_number
     )
 
     return AppointmentResponse(agent_message=response)
