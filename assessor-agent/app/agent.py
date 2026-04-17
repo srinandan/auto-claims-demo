@@ -31,8 +31,16 @@ from google.cloud import bigquery
 import os
 import google.auth
 
-_, project_id = google.auth.default()
-os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+try:
+    _, project_id = google.auth.default()
+    if project_id:
+        os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+        os.environ["GOOGLE_CLOUD_QUOTA_PROJECT"] = project_id
+except Exception:
+    pass
+
+if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
+    os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 
@@ -41,18 +49,20 @@ async def auto_save_session_to_memory_callback(callback_context):
         callback_context._invocation_context.session
     )
 
+
 class RefreshingGemini(Gemini):
     @property
     def api_client(self):
-        if 'api_client' in self.__dict__:
-            del self.__dict__['api_client']
+        if "api_client" in self.__dict__:
+            del self.__dict__["api_client"]
         return super().api_client
 
     @property
     def _live_api_client(self):
-        if '_live_api_client' in self.__dict__:
-            del self.__dict__['_live_api_client']
+        if "_live_api_client" in self.__dict__:
+            del self.__dict__["_live_api_client"]
         return super()._live_api_client
+
 
 root_agent = Agent(
     name="AssessorAgent",

@@ -138,11 +138,11 @@ agent_engine = AgentEngineApp.create(
     session_service=VertexAiSessionService(
         project=project_id,
         location=gemini_location,
-        agent_engine_id=os.environ.get("SHARED_AGENT_ENGINE_ID")
+        agent_engine_id=os.environ.get("SHARED_AGENT_ENGINE_ID"),
     ),
     memory_service=VertexAiMemoryBankService(
         project=project_id,
         location=gemini_location,
-        agent_engine_id=os.environ.get("SHARED_AGENT_ENGINE_ID")
+        agent_engine_id=os.environ.get("SHARED_AGENT_ENGINE_ID"),
     ),
 )

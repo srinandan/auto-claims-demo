@@ -76,7 +76,7 @@ steps:
       - "--service-account" 
       - "auto-claims-sa@${PROJECT_ID}.iam.gserviceaccount.com"
       - "--set-env-vars" 
-      - 'AGENT_ENGINE_ENABLED=${_AGENT_ENGINE_ENABLED},SHARED_AGENT_ENGINE_ID=${_SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,ASSESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_ASSESSOR_AGENT_ENGINE_ID},PROCESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_PROCESSOR_AGENT_ENGINE_ID},REPAIR_SHOP_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_REPAIR_SHOP_AGENT_ENGINE_ID},BUCKET_NAME=${PROJECT_ID}-auto-claims'
+      - 'AGENT_ENGINE_ENABLED=${_AGENT_ENGINE_ENABLED},SHARED_AGENT_ENGINE_ID=${_SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_QUOTA_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${_REGION},MOCK_MODE=false,ASSESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_ASSESSOR_AGENT_ENGINE_ID},PROCESSOR_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_PROCESSOR_AGENT_ENGINE_ID},REPAIR_SHOP_AGENT_URL=https://${_REGION}-aiplatform.googleapis.com/v1beta1/projects/${PROJECT_ID}/locations/${_REGION}/reasoningEngines/${_REPAIR_SHOP_AGENT_ENGINE_ID},BUCKET_NAME=${PROJECT_ID}-auto-claims'
       - "--startup-probe"
       - 'initialDelaySeconds=30,tcpSocket.port=8080,timeoutSeconds=240,periodSeconds=240,failureThreshold=1'
       - "--max=1"

@@ -124,9 +124,7 @@ def print_deployment_success(
     if service_account:
         print(f"Service Account: {service_account}")
     else:
-        default_sa = (
-            f"auto-claims-sa@{project}.iam.gserviceaccount.com"
-        )
+        default_sa = f"auto-claims-sa@{project}.iam.gserviceaccount.com"
         print(f"Service Account: {default_sa}")
     console_url = f"https://console.cloud.google.com/vertex-ai/agents/locations/{location}/agent-engines/{agent_engine_id}?project={project}"
     print(f"\n📊 View in Console: {console_url}\n")
@@ -398,7 +396,9 @@ def deploy_agent_engine_app(
     }
     if agent_gateway:
         config_args["agent_gateway_config"] = {
-            "agent_to_anywhere_config": {"agent_gateway": f"projects/{project}/locations/{location}/agentGateways/{agent_gateway}"},
+            "agent_to_anywhere_config": {
+                "agent_gateway": f"projects/{project}/locations/{location}/agentGateways/{agent_gateway}"
+            },
         }
     config = AgentEngineConfig(**config_args)
 

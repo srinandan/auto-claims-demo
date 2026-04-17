@@ -71,6 +71,10 @@ def setup_infrastructure():
         "secretmanager.googleapis.com",
         "compute.googleapis.com",
         "apphub.googleapis.com",
+        "networkservices.googleapis.com",
+        "networksecurity.googleapis.com",
+        "serviceextensions.googleapis.com",
+        "iamconnectors.googleapis.com",
     ]
     print(f"Enabling {len(apis)} APIs...")
     api_list = ' '.join(apis)
@@ -204,6 +208,86 @@ def setup_infrastructure():
     print("IMPORTANT: Don't forget to update the base image path in ai-service/Dockerfile")
     print("to use the correct project ID before running 'make ai-service'!")
     print("==================================================================================\n")
+
+    # 10. Create Agent Gateway
+    print("\n--- Creating Agent Gateway ---")
+    gateway_name = "agent-gw-ge"
+    gateway_check = run_command(f"gcloud alpha network-services agent-gateways describe {gateway_name} --location={location} --project={project_id}", ignore_errors=True)
+    if not gateway_check:
+        print(f"Creating Agent Gateway: {gateway_name}...")
+        yaml_content = f"""
+name: agent-gw-egress
+protocols:
+  - MCP
+googleManaged:
+  governedAccessPath: AGENT_TO_ANYWHERE
+registries:
+  - "//agentregistry.googleapis.com/projects/{{project_id}}/locations/{{location}}"
+"""
+        import subprocess
+        process = subprocess.Popen(
+            f"gcloud alpha network-services agent-gateways import {gateway_name} --location={location} --project={project_id}",
+            shell=True,
+            stdin=subprocess.PIPE,
+            text=True
+        )
+        process.communicate(input=yaml_content.strip())
+        if process.returncode != 0:
+            print(f"Error creating Agent Gateway {gateway_name}")
+            sys.exit(1)
+    else:
+        print(f"Agent Gateway {gateway_name} already exists.")
+
+    # 11. Create Authz Service Extension
+    print("\n--- Creating Authz Service Extension ---")
+    extension_name = "agent-gw-egress-iap-authzextension"
+    extension_check = run_command(f"gcloud service-extensions authz-extensions describe {extension_name} --location={location} --project={project_id}", ignore_errors=True)
+    if not extension_check:
+        print(f"Creating Authz Service Extension: {extension_name}...")
+        yaml_content = """
+name: agent-gw-egress-iap-authzextension
+service: iap.googleapis.com
+metadata:
+ iamEnforcementMode: DRY_RUN
+failOpen: true
+timeout: "10s"
+"""
+        yaml_file = "authz-extension.yaml"
+        with open(yaml_file, "w") as f:
+            f.write(yaml_content.strip())
+        
+        run_command(f"gcloud service-extensions authz-extensions import {extension_name} --source={yaml_file} --location={location} --project={project_id}")
+        os.remove(yaml_file)
+    else:
+        print(f"Authz Service Extension {extension_name} already exists.")
+
+    # 12. Create Authz Policy
+    print("\n--- Creating Authz Policy ---")
+    policy_name = "agent-authz-profile"
+    policy_check = run_command(f"gcloud beta network-security authz-policies describe {policy_name} --location={location} --project={project_id}", ignore_errors=True)
+    if not policy_check:
+        print(f"Creating Authz Policy: {policy_name}...")
+        yaml_content = f"""
+name: agent-authz-profile
+target:
+  resources:
+  - "//networkservices.googleapis.com/projects/{project_id}/locations/{location}/agentGateways/agent-gw-ge"
+policyProfile: REQUEST_AUTHZ
+
+action: CUSTOM
+customProvider:
+  authzExtension:
+    resources:
+    - "projects/{project_id}/locations/{location}/authzExtensions/agent-gw-egress-iap-authzextension"
+"""
+        yaml_file = "authz-profile.yaml"
+        with open(yaml_file, "w") as f:
+            f.write(yaml_content.strip())
+        
+        run_command(f"gcloud beta network-security authz-policies import {policy_name} --source={yaml_file} --location={location} --project={project_id}")
+        os.remove(yaml_file)
+    else:
+        print(f"Authz Policy {policy_name} already exists.")
 
     print("\nInfrastructure setup script completed successfully.")
 

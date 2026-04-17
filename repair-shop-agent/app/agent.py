@@ -29,33 +29,44 @@ from google.adk.plugins.bigquery_agent_analytics_plugin import (
 from google.cloud import bigquery
 
 import os
-from google import auth
+import google.auth
 
-_, project_id = auth.default()
-os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
+try:
+    _, project_id = google.auth.default()
+    if project_id:
+        os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+        os.environ["GOOGLE_CLOUD_QUOTA_PROJECT"] = project_id
+except Exception:
+    pass
+
+if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
+    os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+
 
 async def auto_save_session_to_memory_callback(callback_context):
     await callback_context._invocation_context.memory_service.add_session_to_memory(
         callback_context._invocation_context.session
     )
 
+
 # Repair Shop Agent Definition
 MODEL_NAME = os.environ.get("MODEL", "gemini-2.5-flash")
+
 
 class RefreshingGemini(Gemini):
     @property
     def api_client(self):
-        if 'api_client' in self.__dict__:
-            del self.__dict__['api_client']
+        if "api_client" in self.__dict__:
+            del self.__dict__["api_client"]
         return super().api_client
 
     @property
     def _live_api_client(self):
-        if '_live_api_client' in self.__dict__:
-            del self.__dict__['_live_api_client']
+        if "_live_api_client" in self.__dict__:
+            del self.__dict__["_live_api_client"]
         return super()._live_api_client
+
 
 root_agent = Agent(
     name="RepairShopAgent",
@@ -82,7 +93,7 @@ root_agent = Agent(
     """,
     tools=[google_search, load_memory],
     after_agent_callback=auto_save_session_to_memory_callback,
-    output_key="shops"
+    output_key="shops",
 )
 
 # Initialize BigQuery Analytics
