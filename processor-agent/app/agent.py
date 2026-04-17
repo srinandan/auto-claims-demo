@@ -13,13 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-from zoneinfo import ZoneInfo
-
 from google.adk.agents import Agent
 from google.adk.apps import App
 from google.adk.models import Gemini
-from google.adk.tools import LongRunningFunctionTool
 from google.genai import types
 import logging
 from google.adk.plugins.bigquery_agent_analytics_plugin import (
