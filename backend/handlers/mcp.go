@@ -40,6 +40,10 @@ func ResolveAddress(c *gin.Context) {
 	}
 
 	apiKey := os.Getenv("GOOGLE_MAPS_API_KEY")
+	if apiKey == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "GOOGLE_MAPS_API_KEY environment variable is not set"})
+		return
+	}
 
 	client := mcp.NewClient(&mcp.Implementation{Name: "mcp-client", Version: "v1.0.0"}, nil)
 

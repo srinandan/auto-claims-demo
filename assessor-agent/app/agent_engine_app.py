@@ -121,6 +121,7 @@ class AgentEngineApp(A2aAgent):
         """Returns a clone of the Agent Engine application."""
         return self
 
+
 _, project_id = google.auth.default()
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
@@ -137,14 +138,10 @@ agent_engine = AgentEngineApp.create(
         else InMemoryArtifactService()
     ),
     session_service=VertexAiSessionService(
-        project=project_id,
-        location=gemini_location,
-        agent_engine_id=engine_id
+        project=project_id, location=gemini_location, agent_engine_id=engine_id
     ),
     # session_service=InMemorySessionService(),
     memory_service=VertexAiMemoryBankService(
-        project=project_id,
-        location=gemini_location,
-        agent_engine_id=engine_id
+        project=project_id, location=gemini_location, agent_engine_id=engine_id
     ),
 )

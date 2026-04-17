@@ -342,6 +342,7 @@ dependencies = [
     { name = "opentelemetry-instrumentation-grpc" },
     { name = "opentelemetry-instrumentation-httpx" },
     { name = "protobuf" },
+    { name = "ruff" },
 ]
 
 [package.optional-dependencies]
@@ -380,6 +381,7 @@ requires-dist = [
     { name = "opentelemetry-instrumentation-grpc", specifier = ">=0.59b0" },
     { name = "opentelemetry-instrumentation-httpx", specifier = ">=0.59b0" },
     { name = "protobuf", specifier = ">=6.31.1,<7.0.0" },
+    { name = "ruff", specifier = ">=0.15.10" },
     { name = "ruff", marker = "extra == 'lint'", specifier = ">=0.4.6,<1.0.0" },
     { name = "ty", marker = "extra == 'lint'", specifier = ">=0.0.1a0" },
 ]
