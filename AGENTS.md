@@ -152,6 +152,7 @@ Key conventions:
 - The orchestrator (`ai-service`) is the only caller — agents do not call each other directly.
 - Data is passed as structured JSON payloads between agents.
 - The full conversation/state context is included in each request, as agents are stateless between calls.
+- **Security:** Remote agents are configured to use an **Agent Gateway** for governed access and secure egress in cloud deployments.
 
 ---
 

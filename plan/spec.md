@@ -211,6 +211,6 @@ Each service can be run locally using commands specified in its `Makefile`.
 
 ### Cloud Deployment
 Deploying to Google Cloud involves three phases:
-1. `python3 infra/setup.py` (Foundation Setup)
+1. `python3 infra/setup.py` (Foundation Setup - now includes Agent Gateway, Authz Service Extension, and Authz Policy setup)
 2. Deploying each service to Cloud Run / Vertex AI (`gcloud builds submit --config .cloudbuild/deploy.yaml .`)
 3. `python3 infra/setup_lb.py` (Setup Load Balancer)
