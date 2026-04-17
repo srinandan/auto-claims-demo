@@ -168,7 +168,8 @@ async def process_claims(request: ClaimsRequest):
                 continue
 
             else:
-                content = read_image_from_gcs(uri)
+                # Use run_in_threadpool for blocking GCS I/O
+                content = await run_in_threadpool(read_image_from_gcs, uri)
 
             # Use YOLO to detect damages
             detections = []
