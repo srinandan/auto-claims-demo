@@ -71,6 +71,10 @@ def setup_infrastructure():
         "secretmanager.googleapis.com",
         "compute.googleapis.com",
         "apphub.googleapis.com",
+        "networkservices.googleapis.com",
+        "networksecurity.googleapis.com",
+        "serviceextensions.googleapis.com",
+        "iamconnectors.googleapis.com",
     ]
     print(f"Enabling {len(apis)} APIs...")
     api_list = ' '.join(apis)
