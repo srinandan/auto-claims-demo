@@ -15,26 +15,30 @@ import asyncio
 import logging
 import os
 from typing import Any
-from dotenv import load_dotenv
 
 import google.auth
 import nest_asyncio
 import vertexai
 from a2a.types import AgentCapabilities, AgentCard, TransportProtocol
 from dotenv import load_dotenv
+from google.adk.a2a.converters.request_converter import (
+    AgentRunRequest,
+    convert_a2a_request_to_agent_run_request,
+)
 from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
+from google.adk.a2a.executor.config import A2aAgentExecutorConfig
 from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
 from google.adk.apps import App
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
 from google.adk.memory import VertexAiMemoryBankService
 from google.adk.runners import Runner
-from google.adk.sessions import VertexAiSessionService, InMemorySessionService
+from google.adk.sessions import VertexAiSessionService
 from google.cloud import logging as google_cloud_logging
 from vertexai.preview.reasoning_engines import A2aAgent
 
 from app.agent import app as adk_app
-from app.app_utils.telemetry import setup_telemetry
 from app.app_utils.custom_types import Feedback
+from app.app_utils.telemetry import setup_telemetry
 
 # Load environment variables from .env file at runtime
 load_dotenv()
@@ -75,8 +79,31 @@ class AgentEngineApp(A2aAgent):
 
         agent_card = asyncio.run(AgentEngineApp.build_agent_card(app=app))
 
+        def custom_request_converter(request, part_converter) -> AgentRunRequest:
+            run_request = convert_a2a_request_to_agent_run_request(request, part_converter)
+            user_id = None
+            if request.call_context and request.call_context.metadata:
+                user_id = request.call_context.metadata.get("x-adk-user-id") or request.call_context.metadata.get("user_id")
+
+            if not user_id:
+                # The context_id has format ADK$app_name$user_id$session_id. We can try splitting.
+                # However, it's safer to just extract from context_id parts directly if we know it.
+                parts = request.context_id.split("$") if request.context_id else []
+                if len(parts) >= 3:
+                    # e.g., parts = ["ADK", "app", "12345", "sess_xyz"]
+                    # If prefix is ADK, user_id is the 3rd element
+                    if parts[0] == "ADK":
+                        user_id = parts[2]
+
+            if not user_id:
+                user_id = f'A2A_USER_{request.context_id}'
+
+            return run_request.model_copy(update={"user_id": user_id})
+
+        config = A2aAgentExecutorConfig(request_converter=custom_request_converter)
+
         return AgentEngineApp(
-            agent_executor_builder=lambda: A2aAgentExecutor(runner=create_runner()),
+            agent_executor_builder=lambda: A2aAgentExecutor(runner=create_runner(), config=config),
             agent_card=agent_card,
         )
 
