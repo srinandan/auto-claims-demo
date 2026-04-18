@@ -40,7 +40,8 @@ class RepairShopAgentService:
         if self.agent_engine_enabled == "true":
             self.repair_shop_agent_card_url = f"{self.repair_shop_agent_url}/a2a/v1/card" if self.repair_shop_agent_url else ""
         else:
-            self.repair_shop_agent_card_url = f"{self.repair_shop_agent_url}/a2a/app{AGENT_CARD_WELL_KNOWN_PATH}" if self.repair_shop_agent_url else ""
+            app_name = os.getenv("SHARED_AGENT_ENGINE_ID", "app")
+            self.repair_shop_agent_card_url = f"{self.repair_shop_agent_url}/a2a/{app_name}{AGENT_CARD_WELL_KNOWN_PATH}" if self.repair_shop_agent_url else ""
 
         self.httpx_client = httpx.AsyncClient(
             auth=GoogleAuth(),

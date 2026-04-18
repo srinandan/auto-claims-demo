@@ -123,6 +123,6 @@ if _project_id:
 
 app = App(
     root_agent=root_agent,
-    name="app",
+    name=os.getenv("SHARED_AGENT_ENGINE_ID", "app"),
     plugins=_plugins,
 )
