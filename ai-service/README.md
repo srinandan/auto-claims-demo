@@ -55,13 +55,13 @@ To deploy this service to Cloud Run, you must first build the base image which c
 3. Update the `Dockerfile`'s `FROM` instruction to point to this new base image URI.
 4. Deploy the actual service by running:
    ```bash
-   make ai-service
+   make deploy
    ```
 
 ### Run Locally
 
 ```bash
-make local-ai-service
+make local
 ```
 
 This command will:

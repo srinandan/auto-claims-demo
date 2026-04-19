@@ -10,9 +10,11 @@ SHARED_AGENT_ENGINE_ID ?= 3064462601669836800
 GOOGLE_MAPS_API_KEY= $(shell gcloud secrets versions access latest --secret="maps-api-key")
 AGENT_GATEWAY ?= agent-gw-egress
 
-.PHONY: local deploy
+.PHONY: local deploy setup-iam
 
-local:
+local: local-processor-agent
+
+local-processor-agent:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${GOOGLE_CLOUD_LOCATION} ;\
 	export PROJECT_ID=${GOOGLE_CLOUD_PROJECT} ;\
@@ -61,3 +63,7 @@ deploy:
 		--agent-gateway=${AGENT_GATEWAY} \
 		--set-env-vars=GOOGLE_CLOUD_LOCATION=${GOOGLE_CLOUD_LOCATION},GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY},GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES=false,OTEL_SERVICE_NAME=auto-claims-processor-agent,OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true,REASONING_ENGINE_ID=${REASONING_ENGINE_ID},SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true,BQ_ANALYTICS_DATASET_LOCATION=${BQ_ANALYTICS_DATASET_LOCATION} \
 		--requirements-file=app/app_utils/.requirements.txt
+
+setup-iam:
+	uv run python iam.py
+
