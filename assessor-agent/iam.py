@@ -16,21 +16,23 @@
 import json
 import logging
 import os
+
 import google.auth
 import vertexai
 from google.cloud import resourcemanager_v3
 from google.iam.v1 import iam_policy_pb2, policy_pb2
 
+
 def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
     logging.basicConfig(level=logging.INFO)
-    
+
     if not os.path.exists(metadata_file):
         logging.error(f"Metadata file {metadata_file} not found. Run 'make deploy' first.")
         return
 
-    with open(metadata_file, "r") as f:
+    with open(metadata_file) as f:
         metadata = json.load(f)
-    
+
     principal = metadata.get("principal")
     remote_agent_id = metadata.get("remote_agent_engine_id")
 
@@ -49,7 +51,7 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
     if not principal:
         logging.error("Principal could not be determined.")
         return
-        
+
     logging.info(f"Reasoning Engine Principal: {principal}")
 
     # Extract project_id from principal or metadata
@@ -76,7 +78,7 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
     logging.info(f"Granting {len(roles)} roles to {principal} in project {project_id}...")
     proj_client = resourcemanager_v3.ProjectsClient()
     resource = f"projects/{project_id}"
-    
+
     policy = proj_client.get_iam_policy(
         request=iam_policy_pb2.GetIamPolicyRequest(resource=resource)
     )
@@ -100,7 +102,7 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
         )
         logging.info("✅ IAM policy updated successfully.")
     else:
-        logging.info("ℹ️ All roles already assigned. No changes made.")
+        logging.info("All roles already assigned. No changes made.")
 
 if __name__ == "__main__":
     set_iam_permissions()
