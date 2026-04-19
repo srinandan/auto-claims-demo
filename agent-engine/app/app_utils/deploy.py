@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
 import datetime
-import importlib
-import inspect
 import json
 import logging
 import warnings
+
 # pylint: disable=no-name-in-module
 from typing import Any
 
@@ -26,6 +24,7 @@ import click
 import google.auth
 import vertexai
 from google.cloud import resourcemanager_v3
+
 # pylint: disable=no-member
 from google.iam.v1 import iam_policy_pb2, policy_pb2
 from vertexai._genai import _agent_engines_utils
@@ -342,7 +341,7 @@ def deploy_agent_engine_app(
         for key, value in sorted(env_vars.items()):
             click.echo(f"  {key}: {format_env_value(value)}")
 
-    source_packages_list = list(source_packages)
+    # source_packages_list = list(source_packages)
 
     # Initialize vertexai client
     # Use v1beta1 API when agent identity is enabled (required for identity_type)

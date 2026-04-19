@@ -18,7 +18,7 @@ import (
 	"log"
 	"os"
 
-	"example.com/claims-app/models"
+	"internal/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )

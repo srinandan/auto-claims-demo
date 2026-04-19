@@ -14,6 +14,7 @@
 
 import logging
 import os
+
 from opentelemetry.propagate import set_global_textmap
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 

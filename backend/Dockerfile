@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-FROM golang:1.25.8 AS builder
+FROM golang:1.25.9 AS builder
 
 # Set destination for COPY
 WORKDIR /app
