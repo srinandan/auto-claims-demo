@@ -100,6 +100,28 @@ No automated test suites exist yet for the A2A agents or frontend — add them u
 
 ---
 
+## Deployment & IAM
+
+After deploying an agent to Vertex AI Agent Engine, you must set up the necessary IAM permissions for the reasoning engine principal.
+
+### Deploying an Agent
+
+```bash
+cd <service-dir> && make deploy
+```
+
+### Setting up IAM Permissions
+
+Once the deployment is complete and `deployment_metadata.json` is created, run:
+
+```bash
+cd <service-dir> && make setup-iam
+```
+
+This command automatically retrieves the reasoning engine principal and grants it the required roles for AI Platform, BigQuery, Logging, and Monitoring.
+
+---
+
 ## Adding a New Agent
 
 1. Create a new directory at the repo root (e.g., `./my-new-agent/`).

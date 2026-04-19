@@ -25,6 +25,16 @@ make install && make playground
 | -------------------- | ------------------------------------------------------------------------------------------- |
 | `make install`       | Install dependencies using uv                                                               |
 | `make playground`    | Launch local development environment                                                        |
+| `make deploy`         | Deploy agent to Cloud Run                                                                   |
+| `make setup-iam`      | Set up IAM permissions for the reasoning engine principal                                   |
 | `make local-repair-shop-agent` | Launch local development server on port 8083                                   |
 
 For full command options and usage, refer to the [Makefile](Makefile).
+
+## Deployment
+
+```bash
+gcloud config set project <your-project-id>
+make deploy
+make setup-iam
+```

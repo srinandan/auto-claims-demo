@@ -23,7 +23,7 @@ The project includes a `Makefile` for easy setup.
 ### Run Locally
 
 ```bash
-make local-frontend
+make local
 ```
 
 This command will:

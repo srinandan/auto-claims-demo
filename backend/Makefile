@@ -6,7 +6,9 @@ SERVICE_ACCOUNT_EMAIL ?= $(shell echo "auto-claims-sa@${GOOGLE_CLOUD_PROJECT}.ia
 _COMMIT_SHA ?= $(shell echo | find go.mod go.sum database models handlers main.go -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 AI_SERVICE_URL ?= http://localhost:8000
 
-.PHONY: local deploy
+.PHONY: local deploy local-backend
+
+local-backend: local
 
 local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\

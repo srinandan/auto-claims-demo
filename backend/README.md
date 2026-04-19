@@ -32,7 +32,7 @@ The application expects the following environment variables (handled by `Makefil
 ### Run Locally
 
 ```bash
-make local-backend
+make local
 ```
 
 This command will:

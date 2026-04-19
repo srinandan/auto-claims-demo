@@ -7,7 +7,9 @@ OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 VITE_OTLP_EXPORTER_URL=https://telemetry.googleapis.com/v1/traces
 
 
-.PHONY: local deploy
+.PHONY: local deploy local-frontend
+
+local-frontend: local
 
 local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\

@@ -27,7 +27,7 @@ The project includes a `Makefile` for easy local execution and Cloud Build deplo
 2. Run the load generator locally via Make:
 
 ```bash
-make local-loadgen
+make local
 ```
 
 This will automatically install dependencies and start the generator.

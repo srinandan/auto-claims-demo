@@ -9,7 +9,9 @@ REPAIR_SHOP_AGENT_URL ?= http://localhost:8083
 PORT ?= 8000
 AGENT_ENGINE_ENABLED ?= false
 
-.PHONY: local deploy
+.PHONY: local deploy local-ai-service
+
+local-ai-service: local
 
 local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
