@@ -3,7 +3,7 @@ PROJECT_NUMBER ?= $(shell gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --for
 GOOGLE_CLOUD_LOCATION ?= $(shell gcloud config get-value compute/region)
 BUCKET_NAME ?= $(shell echo ${GOOGLE_CLOUD_PROJECT}-auto-claims)
 SERVICE_ACCOUNT_EMAIL ?= $(shell echo "auto-claims-sa@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com")
-_COMMIT_SHA ?= $(shell echo | find go.mod go.sum database models handlers main.go -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
+_COMMIT_SHA ?= $(shell echo | find go.mod go.sum internal main.go -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 AI_SERVICE_URL ?= http://localhost:8000
 
 .PHONY: local deploy local-backend

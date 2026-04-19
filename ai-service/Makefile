@@ -2,7 +2,7 @@ GOOGLE_CLOUD_PROJECT ?= $(shell gcloud config get-value project)
 PROJECT_NUMBER ?= $(shell gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --format="value(projectNumber)")
 GOOGLE_CLOUD_LOCATION ?= $(shell gcloud config get-value compute/region)
 BUCKET_NAME ?= $(shell echo ${GOOGLE_CLOUD_PROJECT}-auto-claims)
-_COMMIT_SHA ?= $(shell echo | find uv.lock *.py -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
+_COMMIT_SHA ?= $(shell echo | find . -path ./.venv -prune -o -type f \( -name "*.py" -o -name "uv.lock" \) -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 ASSESSOR_AGENT_URL ?= http://localhost:8081
 PROCESSOR_AGENT_URL ?= http://localhost:8082
 REPAIR_SHOP_AGENT_URL ?= http://localhost:8083
