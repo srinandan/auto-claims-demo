@@ -70,6 +70,7 @@ def setup_telemetry() -> str | None:
     credentials, project_id = google.auth.default(
         scopes=["https://www.googleapis.com/auth/cloud-platform"]
     )
+    assert project_id is not None, "GCP Project ID must be set"
     otel_hooks = get_gcp_exporters(
         enable_cloud_tracing=True,
         enable_cloud_metrics=False,
