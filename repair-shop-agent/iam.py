@@ -30,30 +30,32 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
     with open(metadata_file, "r") as f:
         metadata = json.load(f)
     
+    principal = metadata.get("principal")
     remote_agent_id = metadata.get("remote_agent_engine_id")
-    if not remote_agent_id:
-        logging.error("remote_agent_engine_id not found in metadata.")
-        return
 
-    # Extract project and location from remote_agent_id
-    # Format: projects/{project}/locations/{location}/reasoningEngines/{id}
-    parts = remote_agent_id.split("/")
-    project_id = parts[1]
-    location = parts[3]
+    if not principal and remote_agent_id:
+        logging.info(f"Principal not found in metadata. Fetching for {remote_agent_id}...")
+        parts = remote_agent_id.split("/")
+        project_id = parts[1]
+        location = parts[3]
+        vertexai.init(project=project_id, location=location)
+        client = vertexai.Client(project=project_id, location=location, http_options={"api_version": "v1beta1"})
+        agent = client.agent_engines.get(name=remote_agent_id)
+        effective_identity = agent.api_resource.spec.effective_identity
+        if effective_identity:
+            principal = f"principal://{effective_identity}"
 
-    vertexai.init(project=project_id, location=location)
-    client = vertexai.Client(project=project_id, location=location, http_options={"api_version": "v1beta1"})
-    
-    logging.info(f"Retrieving agent engine details for {remote_agent_id}...")
-    agent = client.agent_engines.get(name=remote_agent_id)
-    
-    effective_identity = agent.api_resource.spec.effective_identity
-    if not effective_identity:
-        logging.error("Effective identity not found for agent.")
+    if not principal:
+        logging.error("Principal could not be determined.")
         return
         
-    principal = f"principal://{effective_identity}"
     logging.info(f"Reasoning Engine Principal: {principal}")
+
+    # Extract project_id from principal or metadata
+    if remote_agent_id:
+        project_id = remote_agent_id.split("/")[1]
+    else:
+        _, project_id = google.auth.default()
 
     roles = [
         "roles/aiplatform.user",
@@ -78,10 +80,8 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
         request=iam_policy_pb2.GetIamPolicyRequest(resource=resource)
     )
 
-    # Add roles if not already present
     changed = False
     for role in roles:
-        # Check if the binding already exists for this role and member
         existing_binding = next((b for b in policy.bindings if b.role == role), None)
         if existing_binding:
             if principal not in existing_binding.members:

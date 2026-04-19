@@ -92,8 +92,10 @@ def write_deployment_metadata(
     metadata_file: str = "deployment_metadata.json",
 ) -> None:
     """Write deployment metadata to file."""
+    effective_identity = getattr(remote_agent.api_resource.spec, "effective_identity", None)
     metadata = {
         "remote_agent_engine_id": remote_agent.api_resource.name,
+        "principal": f"principal://{effective_identity}" if effective_identity else None,
         "deployment_target": "agent_engine",
         "is_a2a": True,
         "deployment_timestamp": datetime.datetime.now().isoformat(),
