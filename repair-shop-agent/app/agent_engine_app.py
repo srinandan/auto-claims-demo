@@ -123,6 +123,7 @@ class AgentEngineApp(A2aAgent):
 
 
 _, project_id = google.auth.default()
+assert project_id is not None, "GCP Project ID must be set"
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 if not os.environ.get("GOOGLE_CLOUD_LOCATION"):
     os.environ["GOOGLE_CLOUD_LOCATION"] = "us-central1"

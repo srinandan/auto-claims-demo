@@ -114,7 +114,7 @@ def print_deployment_success(
     # Extract agent engine ID and project number for console URL
     resource_name_parts = remote_agent.api_resource.name.split("/")
     agent_engine_id = resource_name_parts[-1]
-    project_number = resource_name_parts[1]
+    _project_number = resource_name_parts[1]
     print(
         "\n✅ Deployment successful! Test your agent: notebooks/adk_a2a_app_testing.ipynb"
     )
