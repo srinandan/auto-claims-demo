@@ -61,5 +61,18 @@ deploy:
 		--requirements-file=app/app_utils/.requirements.txt
 
 setup-iam:
+	@if [ -f deployment_metadata.json ]; then \
+		PRINCIPAL=$$(jq -r '.principal' deployment_metadata.json) ;\
+		ENDPOINT_ID=$$(gcloud alpha agent-registry services describe all-apis --location=${GOOGLE_CLOUD_LOCATION} --project=${GOOGLE_CLOUD_PROJECT} --format="value(registryResource.scope().segment(-1))") ;\
+		echo "{\"bindings\": [{\"role\": \"roles/iap.egressor\", \"members\": [\"$$PRINCIPAL\"]}]}" > agents-iap-policy.json ;\
+		gcloud beta iap web set-iam-policy agents-iap-policy.json \
+			--project=${GOOGLE_CLOUD_PROJECT} \
+			--endpoint=$$ENDPOINT_ID \
+			--region=${GOOGLE_CLOUD_LOCATION} \
+			--quiet ;\
+		rm agents-iap-policy.json ;\
+	else \
+		echo "Warning: deployment_metadata.json not found. Skipping IAP policy setup." ;\
+	fi
 	uv run python iam.py
 

@@ -42,6 +42,7 @@ This will:
 - Enable necessary APIs (Cloud Run, Vertex AI, Artifact Registry, Secret Manager, BigQuery, etc.).
 - Create a service account `auto-claims-sa` with the required IAM roles.
 - Create a GCS bucket, Artifact Registry repository, Secret Manager secrets, BigQuery dataset, and Cloud Build worker pool.
+- Create an Agent Registry service `all-apis` with necessary API endpoints for Agent Engine functionality.
 
 ### 1. Installation
 Install dependencies for all components according to their respective READMEs.

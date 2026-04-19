@@ -60,7 +60,7 @@ make install && make playground
 | `make lint`          | Run code quality checks                                                                     |
 | `make test`          | Run unit and integration tests                                                              |
 | `make deploy`              | Deploy agent to Cloud Run                                                                   |
-| `make setup-iam`           | Set up IAM permissions for the reasoning engine principal                                   |
+| `make setup-iam`           | Set up IAM permissions for the reasoning engine principal and IAP egressor policy for Agent Registry |
 | `make local-processor-agent` | Launch local development server on port 8082                                             |
 | `make inspector`           | Launch A2A Protocol Inspector                                                               |
 | `make setup-dev-env`       | Set up development environment resources using Terraform                                   |
@@ -97,3 +97,4 @@ See the [deployment guide](https://googlecloudplatform.github.io/agent-starter-p
 
 Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
 See the [observability guide](https://googlecloudplatform.github.io/agent-starter-pack/guide/observability) for queries and dashboards.
+ty guide](https://googlecloudplatform.github.io/agent-starter-pack/guide/observability) for queries and dashboards.
