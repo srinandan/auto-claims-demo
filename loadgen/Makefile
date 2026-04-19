@@ -1,7 +1,7 @@
 GOOGLE_CLOUD_PROJECT ?= $(shell gcloud config get-value project)
 PROJECT_NUMBER ?= $(shell gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --format="value(projectNumber)")
 GOOGLE_CLOUD_LOCATION ?= us-central1
-_COMMIT_SHA ?= $(shell echo | find api-load-generator/package.json api-load-generator/package-lock.json api-load-generator/lib api-load-generator/config Dockerfile -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
+_COMMIT_SHA ?= $(shell echo | find api-load-generator Dockerfile -path api-load-generator/node_modules -prune -o -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 OTEL_TRACES_EXPORTER=otlp
 OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 OTEL_SERVICE_NAME=auto-claims-loadgen
