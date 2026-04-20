@@ -19,6 +19,8 @@ import torch
 import logging
 from typing import List, Dict, Tuple, Optional, Union
 import os
+import io
+import requests
 from ultralytics import YOLO
 from huggingface_hub import hf_hub_download
 
@@ -133,29 +135,41 @@ class CarDamageDetector:
         Returns:
             np.ndarray: Preprocessed image array
         """
-        if isinstance(image, str):
-            # Load from file path
-            img = cv2.imread(image)
-            if img is None:
-                raise ValueError(f"Could not load image from {image}")
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        elif isinstance(image, Image.Image):
-            # Convert PIL Image to numpy array
-            img = np.array(image)
-        elif isinstance(image, np.ndarray):
-            # Use numpy array directly
-            img = image.copy()
-        elif isinstance(image, bytes):
-            # Convert bytes to numpy array
-            nparr = np.frombuffer(image, np.uint8)
-            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-            if img is None:
-                 raise ValueError("Could not decode image bytes")
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        else:
-            raise TypeError("Image must be a file path, PIL Image, numpy array, or bytes")
+        try:
+            if isinstance(image, str):
+                if image.startswith(('http://', 'https://')):
+                    # Load from URL
+                    response = requests.get(image, timeout=10)
+                    response.raise_for_status()
+                    img = Image.open(io.BytesIO(response.content))
+                    img = np.array(img.convert('RGB'))
+                else:
+                    # Load from file path
+                    img = cv2.imread(image)
+                    if img is None:
+                        raise ValueError(f"Could not load image from {image}")
+                    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            elif isinstance(image, Image.Image):
+                # Convert PIL Image to numpy array
+                img = np.array(image.convert('RGB'))
+            elif isinstance(image, np.ndarray):
+                # Use numpy array directly
+                img = image.copy()
+            elif isinstance(image, bytes):
+                # Convert bytes to numpy array
+                nparr = np.frombuffer(image, np.uint8)
+                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+                if img is None:
+                    raise ValueError("Could not decode image bytes")
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            else:
+                raise TypeError("Image must be a file path, PIL Image, numpy array, or bytes")
 
-        return img
+            return img
+        except Exception as e:
+            if isinstance(e, (ValueError, TypeError)):
+                raise e
+            raise ValueError(f"Error preprocessing image: {str(e)}")
 
     def _calculate_damage_area(self, bbox: List[int], image_shape: Tuple[int, int]) -> float:
         """
