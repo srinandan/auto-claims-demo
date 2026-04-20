@@ -20,8 +20,6 @@ from google.adk.plugins.bigquery_agent_analytics_plugin import (
     BigQueryLoggerConfig,
 )
 from google.cloud import bigquery
-import json
-import asyncio
 import os
 import logging
 

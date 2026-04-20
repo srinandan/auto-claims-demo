@@ -15,7 +15,6 @@ import asyncio
 import logging
 import os
 from typing import Any
-from dotenv import load_dotenv
 
 import google.auth
 import nest_asyncio
@@ -28,13 +27,13 @@ from google.adk.apps import App
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
 from google.adk.memory import VertexAiMemoryBankService
 from google.adk.runners import Runner
-from google.adk.sessions import VertexAiSessionService, InMemorySessionService
+from google.adk.sessions import VertexAiSessionService
 from google.cloud import logging as google_cloud_logging
 from vertexai.preview.reasoning_engines import A2aAgent
 
 from app.agent import app as adk_app
-from app.app_utils.telemetry import setup_telemetry
 from app.app_utils.custom_types import Feedback
+from app.app_utils.telemetry import setup_telemetry
 
 # Load environment variables from .env file at runtime
 load_dotenv()

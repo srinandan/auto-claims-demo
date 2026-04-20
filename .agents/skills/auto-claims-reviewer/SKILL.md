@@ -108,3 +108,11 @@ PR body must include:
 - **Summary**: 2–4 bullet points describing what changed and why.
 - **Services affected**: list of service directories touched.
 - **Test plan**: what was run and what passed.
+
+---
+
+## Step 8 — Code Coverage and Unit Tests Review
+
+The reviewer must examine code coverage reports and ensure that all new code is accompanied by corresponding unit tests. Verify that:
+- Coverage metrics are collected and ideally meet the required threshold (80%).
+- All unit tests run cleanly without network dependency issues (by utilizing mocks).
