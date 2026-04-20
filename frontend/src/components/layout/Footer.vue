@@ -6,8 +6,8 @@
       </p>
       <div class="flex flex-wrap justify-center gap-6">
         <a class="text-[#47607e] font-body text-xs uppercase tracking-widest hover:text-[#000000] transition-colors" href="#">Support Center</a>
-        <a class="text-[#47607e] font-body text-xs uppercase tracking-widest hover:text-[#000000] transition-colors" href="#">Privacy Policy</a>
-        <a class="text-[#47607e] font-body text-xs uppercase tracking-widest hover:text-[#000000] transition-colors" href="#">Terms of Service</a>
+        <router-link class="text-[#47607e] font-body text-xs uppercase tracking-widest hover:text-[#000000] transition-colors" to="/privacy">Privacy Policy</router-link>
+        <router-link class="text-[#47607e] font-body text-xs uppercase tracking-widest hover:text-[#000000] transition-colors" to="/terms">Terms of Service</router-link>
         <a class="text-[#47607e] font-body text-xs uppercase tracking-widest hover:text-[#000000] transition-colors" href="#">Contact Specialist</a>
       </div>
     </div>
