@@ -39,6 +39,7 @@ assessor-agent/
 Before you begin, ensure you have:
 - **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
 - **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
+- **jq**: Command-line JSON processor (required for IAM setup automation) - [Install](https://jqlang.github.io/jq/download/)
 - **Terraform**: For infrastructure deployment - [Install](https://developer.hashicorp.com/terraform/downloads)
 - **make**: Build automation tool (pre-installed on most Unix-based systems)
 
@@ -60,6 +61,7 @@ make install && make playground
 | `make lint`          | Run code quality checks                                                                     |
 | `make test`          | Run unit and integration tests                                                              |
 | `make deploy`             | Deploy agent to Cloud Run                                                                   |
+| `make setup-iam`          | Set up IAM permissions for the reasoning engine principal                                   |
 | `make local-assessor-agent` | Launch local development server on port 8081                                             |
 | `make inspector`          | Launch A2A Protocol Inspector                                                               |
 | `make setup-dev-env`      | Set up development environment resources using Terraform                                   |
@@ -87,6 +89,7 @@ See the [development guide](https://googlecloudplatform.github.io/agent-starter-
 ```bash
 gcloud config set project <your-project-id>
 make deploy
+make setup-iam
 ```
 To set up your production infrastructure, run `uvx agent-starter-pack setup-cicd`.
 See the [deployment guide](https://googlecloudplatform.github.io/agent-starter-pack/guide/deployment) for details.

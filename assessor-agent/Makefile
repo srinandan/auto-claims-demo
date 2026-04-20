@@ -9,9 +9,11 @@ REASONING_ENGINE_ID ?= 3024167149779288064
 SHARED_AGENT_ENGINE_ID ?= 3064462601669836800
 AGENT_GATEWAY ?= agent-gw-egress
 
-.PHONY: local deploy
+.PHONY: local deploy setup-iam
 
-local:
+local: local-assessor-agent
+
+local-assessor-agent:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
 	export REGION=${GOOGLE_CLOUD_LOCATION} ;\
 	export PROJECT_ID=${GOOGLE_CLOUD_PROJECT} ;\
@@ -58,3 +60,18 @@ deploy:
 		--set-env-vars=GOOGLE_CLOUD_LOCATION=${GOOGLE_CLOUD_LOCATION},GOOGLE_API_PREVENT_AGENT_TOKEN_SHARING_FOR_GCP_SERVICES=false,OTEL_SERVICE_NAME=auto-claims-assessor-agent,OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true,REASONING_ENGINE_ID=${REASONING_ENGINE_ID},SHARED_AGENT_ENGINE_ID=${SHARED_AGENT_ENGINE_ID},GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY=true,BQ_ANALYTICS_DATASET_LOCATION=${BQ_ANALYTICS_DATASET_LOCATION} \
 		--requirements-file=app/app_utils/.requirements.txt
 
+setup-iam:
+	@if [ -f deployment_metadata.json ]; then \
+		PRINCIPAL=$$(jq -r '.principal' deployment_metadata.json) ;\
+		ENDPOINT_ID=$$(gcloud alpha agent-registry services describe all-apis --location=${GOOGLE_CLOUD_LOCATION} --project=${GOOGLE_CLOUD_PROJECT} --format="value(registryResource.scope().segment(-1))") ;\
+		echo "{\"bindings\": [{\"role\": \"roles/iap.egressor\", \"members\": [\"$$PRINCIPAL\"]}]}" > agents-iap-policy.json ;\
+		gcloud beta iap web set-iam-policy agents-iap-policy.json \
+			--project=${GOOGLE_CLOUD_PROJECT} \
+			--endpoint=$$ENDPOINT_ID \
+			--region=${GOOGLE_CLOUD_LOCATION} \
+			--quiet ;\
+		rm agents-iap-policy.json ;\
+	else \
+		echo "Warning: deployment_metadata.json not found. Skipping IAP policy setup." ;\
+	fi
+	uv run python iam.py

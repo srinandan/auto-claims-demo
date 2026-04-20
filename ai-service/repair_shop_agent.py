@@ -12,12 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.adk.agents import LlmAgent
-from google.adk.runners import InMemoryRunner
-from google.adk.tools import google_search
 from google.genai.types import Content, Part
 import json
-import uuid
 import re
 import httpx
 import os
@@ -28,8 +24,6 @@ from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from a2a.client import ClientConfig, ClientFactory
 from a2a.types import TransportProtocol
-from google.auth.transport.requests import Request
-from google.auth import default
 
 
 
@@ -203,7 +197,6 @@ class RepairShopAgentService:
 
 repair_shop_agent_service = RepairShopAgentService()
 
-import json
 
 def get_auto_shops_list():
     """

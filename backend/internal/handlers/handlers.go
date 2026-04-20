@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
-	"example.com/claims-app/database"
-	"example.com/claims-app/models"
-	"example.com/claims-app/pkg/gcs"
+	"example.com/claims-app/internal/database"
+	"example.com/claims-app/internal/models"
+	"example.com/claims-app/internal/pkg/gcs"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )

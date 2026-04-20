@@ -13,21 +13,17 @@
 # limitations under the License.
 
 import os
-from google.adk.agents.remote_a2a_agent import AGENT_CARD_WELL_KNOWN_PATH
 from google.adk.agents.remote_a2a_agent import RemoteA2aAgent
 from google.adk.sessions import VertexAiSessionService
 from google.adk.memory import VertexAiMemoryBankService
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents import SequentialAgent
 from google.adk.runners import Runner
 from google.genai.types import Content, Part
 import json
-import uuid
 import re
 import httpx
 from a2a.client import ClientConfig, ClientFactory
 from a2a.types import TransportProtocol
-from google.auth.transport.requests import Request
-from google.auth import default
 
 factory = None
 

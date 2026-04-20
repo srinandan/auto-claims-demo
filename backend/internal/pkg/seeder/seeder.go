@@ -22,7 +22,7 @@ import (
 	"strconv"
 	"time"
 
-	"example.com/claims-app/models"
+	"example.com/claims-app/internal/models"
 	"gorm.io/gorm"
 )
 

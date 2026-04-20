@@ -92,8 +92,10 @@ def write_deployment_metadata(
     metadata_file: str = "deployment_metadata.json",
 ) -> None:
     """Write deployment metadata to file."""
+    effective_identity = getattr(remote_agent.api_resource.spec, "effective_identity", None)
     metadata = {
         "remote_agent_engine_id": remote_agent.api_resource.name,
+        "principal": f"principal://{effective_identity}" if effective_identity else None,
         "deployment_target": "agent_engine",
         "is_a2a": True,
         "deployment_timestamp": datetime.datetime.now().isoformat(),
@@ -114,7 +116,7 @@ def print_deployment_success(
     # Extract agent engine ID and project number for console URL
     resource_name_parts = remote_agent.api_resource.name.split("/")
     agent_engine_id = resource_name_parts[-1]
-    project_number = resource_name_parts[1]
+    _project_number = resource_name_parts[1]
     print(
         "\n✅ Deployment successful! Test your agent: notebooks/adk_a2a_app_testing.ipynb"
     )

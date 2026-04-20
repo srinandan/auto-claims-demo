@@ -1,0 +1,14 @@
+package seeder
+
+import (
+    "testing"
+    "gorm.io/driver/sqlite"
+	"gorm.io/gorm"
+	"example.com/claims-app/internal/models"
+)
+
+func TestSeed(t *testing.T) {
+    db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db.AutoMigrate(&models.PolicyHolder{})
+    SeedPolicyHolders(db)
+}

@@ -289,6 +289,57 @@ customProvider:
     else:
         print(f"Authz Policy {policy_name} already exists.")
 
+    # 13. Create Agent Registry Service
+    print("\n--- Creating Agent Registry Service ---")
+    service_id = "all-apis"
+    service_check = run_command(f"gcloud alpha agent-registry services describe {service_id} --location={location} --project={project_id}", ignore_errors=True)
+    if not service_check:
+        print(f"Creating Agent Registry service: {service_id}...")
+        urls = [
+            "https://agentregistry.googleapis.com",
+            "https://agentregistry.mtls.googleapis.com",
+            "https://aiplatform.googleapis.com/",
+            "https://cloudresourcemanager.googleapis.com",
+            "https://cloudresourcemanager.mtls.googleapis.com",
+            "https://logging.googleapis.com",
+            "https://logging.mtls.googleapis.com",
+            "https://logging.us-central1.rep.googleapis.com",
+            "https://monitoring.googleapis.com",
+            "https://monitoring.mtls.googleapis.com",
+            "https://oauth2.googleapis.com",
+            "https://oauth2.mtls.googleapis.com",
+            "https://telemetry.googleapis.com",
+            "https://telemetry.mtls.googleapis.com",
+            "https://telemetry.us-central1.rep.googleapis.com",
+            "https://trace.googleapis.com",
+            "https://trace.mtls.googleapis.com",
+            "https://us-central1-agentregistry.googleapis.com",
+            "https://us-central1-agentregistry.mtls.googleapis.com",
+            "https://us-central1-cloudresourcemanager.googleapis.com",
+            "https://us-central1-cloudresourcemanager.mtls.googleapis.com",
+            "https://us-central1-logging.googleapis.com",
+            "https://us-central1-logging.mtls.googleapis.com",
+            "https://us-central1-monitoring.googleapis.com",
+            "https://us-central1-monitoring.mtls.googleapis.com",
+            "https://us-central1-oauth2.googleapis.com",
+            "https://us-central1-oauth2.mtls.googleapis.com",
+            "https://us-central1-telemetry.googleapis.com",
+            "https://us-central1-telemetry.mtls.googleapis.com",
+            "https://us-central1-trace.googleapis.com",
+            "https://us-central1-trace.mtls.googleapis.com",
+            "https://iap.googleapis.com",
+            "https://iap.mtls.googleapis.com",
+            "https://us-central1-iap.googleapis.com",
+            "https://us-central1-iap.mtls.googleapis.com"
+        ]
+        import json
+        interfaces = [{"url": url, "protocolBinding": "HTTP_JSON"} for url in urls]
+        interfaces_json = json.dumps(interfaces)
+
+        run_command(f'gcloud alpha agent-registry services create {service_id} --location={location} --project={project_id} --display-name="All APIs Consolidated" --description="consolidated APIs to allow Agent Engine to function." --interfaces=\'{interfaces_json}\'')
+    else:
+        print(f"Agent Registry service {service_id} already exists.")
+
     print("\nInfrastructure setup script completed successfully.")
 
 if __name__ == "__main__":

@@ -1,13 +1,15 @@
 GOOGLE_CLOUD_PROJECT ?= $(shell gcloud config get-value project)
 PROJECT_NUMBER ?= $(shell gcloud projects describe ${GOOGLE_CLOUD_PROJECT} --format="value(projectNumber)")
 GOOGLE_CLOUD_LOCATION ?= $(shell gcloud config get-value compute/region)
-_COMMIT_SHA ?= $(shell echo | find public src package.json package-lock.json -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
+_COMMIT_SHA ?= $(shell echo | find public src package.json package-lock.json index.html vite.config.js server.js -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -c 1-10)
 OTEL_TRACES_EXPORTER=otlp
 OTEL_EXPORTER_OTLP_ENDPOINT=https://telemetry.googleapis.com
 VITE_OTLP_EXPORTER_URL=https://telemetry.googleapis.com/v1/traces
 
 
-.PHONY: local deploy
+.PHONY: local deploy local-frontend
+
+local-frontend: local
 
 local:
 	export _COMMIT_SHA=${_COMMIT_SHA} ;\
