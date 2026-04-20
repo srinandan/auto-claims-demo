@@ -96,7 +96,21 @@ export function resolveExpression(input, defaultValue) {
   if (typeof input === "undefined") {
     I = defaultValue;
   } else if (typeof input === "string") {
-    I = eval("(" + input + ")");
+    const trimmedInput = input.trim();
+    if (trimmedInput === "") {
+      I = input;
+    } else {
+      try {
+        I = JSON.parse(input);
+      } catch (e) {
+        const n = Number(input);
+        if (!isNaN(n)) {
+          I = n;
+        } else {
+          I = input;
+        }
+      }
+    }
   }
   return I;
 }
