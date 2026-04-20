@@ -21,6 +21,8 @@ import Login from '../views/Login.vue'
 import NewClaim from '../views/NewClaim.vue'
 import Documents from '../views/Documents.vue'
 import Settings from '../views/Settings.vue'
+import Privacy from '../views/Privacy.vue'
+import Terms from '../views/Terms.vue'
 
 const routes = [
   {
@@ -56,6 +58,18 @@ const routes = [
     path: '/settings',
     name: 'Settings',
     component: Settings,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/privacy',
+    name: 'Privacy',
+    component: Privacy,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/terms',
+    name: 'Terms',
+    component: Terms,
     meta: { requiresAuth: true }
   }
 ]
