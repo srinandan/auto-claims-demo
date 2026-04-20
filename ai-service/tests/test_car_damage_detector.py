@@ -120,7 +120,7 @@ class TestCarDamageDetector(unittest.TestCase):
 
         mock_pil_img = MagicMock()
         mock_pil_img.convert.return_value = mock_pil_img
-        mock_pil.Image.open.return_value = mock_pil_img
+        mock_pil.Image.open.return_value = mock_pil_img  # pylint: disable=no-member
 
         with patch('car_damage_detector.np.array', return_value="np_array_img"):
             result = self.detector._preprocess_image("http://example.com/image.jpg")
