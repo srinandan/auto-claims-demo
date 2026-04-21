@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -389,7 +390,7 @@ func CreateClaim(c *gin.Context) {
 
 		// Construct object name: policyNumber/filename
 		// Using policyNumber as folder
-		objectName := fmt.Sprintf("%s/%s", policyNumber, file.Filename)
+		objectName := fmt.Sprintf("%s/%s", policyNumber, filepath.Base(file.Filename))
 
 		// Upload to GCS
 		if bucketName != "" {
