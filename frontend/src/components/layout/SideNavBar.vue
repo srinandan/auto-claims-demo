@@ -60,12 +60,12 @@
         Emergency Assist
       </button>
       <div class="flex flex-col gap-2 border-t border-outline-variant/10 pt-4">
-        <a class="flex items-center gap-2 text-xs text-[#47607e] font-body hover:text-primary transition-colors" href="#">
+        <router-link class="flex items-center gap-2 text-xs text-[#47607e] font-body hover:text-primary transition-colors" to="/terms">
           <span class="material-symbols-outlined text-sm">gavel</span> Legal
-        </a>
-        <a class="flex items-center gap-2 text-xs text-[#47607e] font-body hover:text-primary transition-colors" href="#">
+        </router-link>
+        <router-link class="flex items-center gap-2 text-xs text-[#47607e] font-body hover:text-primary transition-colors" to="/privacy">
           <span class="material-symbols-outlined text-sm">shield</span> Privacy
-        </a>
+        </router-link>
       </div>
     </div>
   </aside>

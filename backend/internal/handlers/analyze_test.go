@@ -6,7 +6,7 @@ import (
 	"testing"
 	"os"
 
-	"example.com/claims-app/internal/models"
+	"internal/models"
 	"github.com/gin-gonic/gin"
 )
 

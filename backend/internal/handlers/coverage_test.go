@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 	"github.com/gin-gonic/gin"
-	"example.com/claims-app/internal/models"
+	"internal/models"
     "time"
 	"mime/multipart"
 	"encoding/json"

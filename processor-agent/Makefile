@@ -79,3 +79,4 @@ setup-iam:
 		echo "Warning: deployment_metadata.json not found. Skipping IAP policy setup." ;\
 	fi
 	uv run python iam.py
+

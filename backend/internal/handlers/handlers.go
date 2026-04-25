@@ -23,12 +23,13 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
-	"example.com/claims-app/internal/database"
-	"example.com/claims-app/internal/models"
-	"example.com/claims-app/internal/pkg/gcs"
+	"internal/database"
+	"internal/models"
+	"internal/pkg/gcs"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
@@ -389,7 +390,7 @@ func CreateClaim(c *gin.Context) {
 
 		// Construct object name: policyNumber/filename
 		// Using policyNumber as folder
-		objectName := fmt.Sprintf("%s/%s", policyNumber, file.Filename)
+		objectName := fmt.Sprintf("%s/%s", policyNumber, filepath.Base(file.Filename))
 
 		// Upload to GCS
 		if bucketName != "" {

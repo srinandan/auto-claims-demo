@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"example.com/claims-app/internal/models"
+	"internal/models"
 	"github.com/gin-gonic/gin"
 )
 

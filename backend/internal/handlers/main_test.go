@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"example.com/claims-app/internal/database"
-	"example.com/claims-app/internal/models"
+	"internal/database"
+	"internal/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
