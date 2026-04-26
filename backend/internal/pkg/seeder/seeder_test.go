@@ -4,7 +4,7 @@ import (
     "testing"
     "gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"example.com/claims-app/internal/models"
+	"internal/models"
 )
 
 func TestSeed(t *testing.T) {

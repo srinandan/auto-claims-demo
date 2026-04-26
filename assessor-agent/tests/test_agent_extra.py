@@ -14,10 +14,13 @@ def test_refreshing_gemini_properties():
     assert gem.api_client == "MockBaseClient"
     assert gem._live_api_client == "MockLiveClient"
 
+
 def test_big_query_init():
     # To cover lines 94-110 we need to explicitly run the module level initialization logic again.
     import importlib
     import os
+
     with patch.dict(os.environ, {"BQ_ANALYTICS_DATASET_ID": "test"}):
         import app.agent as agent_module
+
         importlib.reload(agent_module)
