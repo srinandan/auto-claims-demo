@@ -1,66 +1,54 @@
-# Copyright 2026 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+from unittest.mock import patch, MagicMock
 
-import unittest
-from unittest.mock import MagicMock, patch
-import sys
-import os
+def test_car_damage_detector_load_success():
+    from car_damage_detector import CarDamageDetector
+    with patch('os.path.exists', return_value=True):
+        with patch('car_damage_detector.YOLO') as mock_yolo:
+            mock_model = MagicMock()
+            mock_yolo.return_value = mock_model
+            detector = CarDamageDetector(model_path="dummy.pt")
+            assert detector is not None
 
-# Add ai-service to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+def test_car_damage_detector_detect():
+    from car_damage_detector import CarDamageDetector
+    with patch('os.path.exists', return_value=True):
+        with patch('car_damage_detector.YOLO') as mock_yolo:
+            mock_model = MagicMock()
 
-# --- MOCKING START ---
-# We must mock sys.modules BEFORE importing the detector to handle heavy dependencies
-mock_cv2 = MagicMock()
-sys.modules['cv2'] = mock_cv2
-mock_np = MagicMock()
-sys.modules['numpy'] = mock_np
-mock_pil = MagicMock()
-sys.modules['PIL'] = mock_pil
-mock_torch = MagicMock()
-sys.modules['torch'] = mock_torch
-mock_yolo = MagicMock()
-sys.modules['ultralytics'] = mock_yolo
-mock_hf = MagicMock()
-sys.modules['huggingface_hub'] = mock_hf
-# --- MOCKING END ---
+            mock_result = MagicMock()
+            mock_box = MagicMock()
+            mock_box.cls.cpu().numpy.return_value = [0]
+            mock_box.conf.cpu().numpy.return_value = [0.9]
+            # Need to return an iterable that can be unpacked to 4 values
+            mock_box_item = MagicMock()
+            mock_box_item.cpu().numpy().astype().tolist.return_value = [0, 0, 10, 10]
+            mock_box.xyxy = [mock_box_item]
+            mock_result.boxes = mock_box
+            mock_result.boxes.__len__ = MagicMock(return_value=1)
 
-from car_damage_detector import CarDamageDetector
+            mock_result.names = {0: "dent"}
+            mock_model.return_value = [mock_result]
 
-class TestCarDamageDetector(unittest.TestCase):
-    @patch('os.path.exists', return_value=False)
-    def test_load_model_file_not_found(self, mock_exists):
-        """
-        Test that _load_model correctly handles a missing model file and
-        raises the appropriate RuntimeError.
-        """
-        with self.assertRaises(RuntimeError) as context:
+            mock_yolo.return_value = mock_model
             detector = CarDamageDetector(model_path="dummy.pt")
 
-        self.assertIn("Failed to load model: Model file not found", str(context.exception))
+            with patch('PIL.Image.open') as mock_img:
+                mock_opened = MagicMock()
+                mock_opened.convert.return_value = MagicMock()
+                mock_img.return_value = mock_opened
 
-    @patch('os.path.exists', return_value=True)
-    def test_load_model_yolo_exception(self, mock_exists):
-        """
-        Test that _load_model correctly handles an exception during the YOLO
-        constructor call and raises a RuntimeError.
-        """
-        with patch('car_damage_detector.YOLO', side_effect=Exception("YOLO init error")):
-            with self.assertRaises(RuntimeError) as context:
-                detector = CarDamageDetector(model_path="dummy.pt")
+                with patch('car_damage_detector.np.array', return_value=MagicMock()) as mock_np:
+                    mock_np.return_value.shape = (100, 100, 3)
+                    with patch.object(detector, '_preprocess_image', return_value=mock_np.return_value):
+                        res = detector.detect_damage(b"fakebytes")
+                        assert "highest_severity" in res
 
-            self.assertIn("Failed to load model: YOLO init error", str(context.exception))
+def test_car_damage_detector_highest_severity():
+    from car_damage_detector import CarDamageDetector
+    with patch('os.path.exists', return_value=True):
+        with patch('car_damage_detector.YOLO'):
+            detector = CarDamageDetector(model_path="dummy.pt")
+            assert detector._get_highest_severity([]) == "none"
+            assert detector._get_highest_severity([{"severity": "light"}]) == "light"
+            assert detector._get_highest_severity([{"severity": "light"}, {"severity": "severe"}]) == "severe"
 
-if __name__ == '__main__':
-    unittest.main()

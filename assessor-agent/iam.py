@@ -27,7 +27,9 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
     logging.basicConfig(level=logging.INFO)
 
     if not os.path.exists(metadata_file):
-        logging.error(f"Metadata file {metadata_file} not found. Run 'make deploy' first.")
+        logging.error(
+            f"Metadata file {metadata_file} not found. Run 'make deploy' first."
+        )
         return
 
     with open(metadata_file) as f:
@@ -37,12 +39,18 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
     remote_agent_id = metadata.get("remote_agent_engine_id")
 
     if not principal and remote_agent_id:
-        logging.info(f"Principal not found in metadata. Fetching for {remote_agent_id}...")
+        logging.info(
+            f"Principal not found in metadata. Fetching for {remote_agent_id}..."
+        )
         parts = remote_agent_id.split("/")
         project_id = parts[1]
         location = parts[3]
         vertexai.init(project=project_id, location=location)
-        client = vertexai.Client(project=project_id, location=location, http_options={"api_version": "v1beta1"})
+        client = vertexai.Client(
+            project=project_id,
+            location=location,
+            http_options={"api_version": "v1beta1"},
+        )
         agent = client.agent_engines.get(name=remote_agent_id)
         effective_identity = agent.api_resource.spec.effective_identity
         if effective_identity:
@@ -75,7 +83,9 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
         "roles/telemetry.writer",
     ]
 
-    logging.info(f"Granting {len(roles)} roles to {principal} in project {project_id}...")
+    logging.info(
+        f"Granting {len(roles)} roles to {principal} in project {project_id}..."
+    )
     proj_client = resourcemanager_v3.ProjectsClient()
     resource = f"projects/{project_id}"
 
@@ -96,13 +106,12 @@ def set_iam_permissions(metadata_file: str = "deployment_metadata.json"):
 
     if changed:
         proj_client.set_iam_policy(
-            request=iam_policy_pb2.SetIamPolicyRequest(
-                resource=resource, policy=policy
-            )
+            request=iam_policy_pb2.SetIamPolicyRequest(resource=resource, policy=policy)
         )
         logging.info("✅ IAM policy updated successfully.")
     else:
         logging.info("All roles already assigned. No changes made.")
+
 
 if __name__ == "__main__":
     set_iam_permissions()
