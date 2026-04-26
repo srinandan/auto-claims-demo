@@ -4,6 +4,15 @@ When invoked, execute the following steps in order. Do not skip steps or ask for
 
 ---
 
+## Step 0 — Plan Before Coding
+
+Before writing any code, ensure you have a clear plan:
+- **Think Before Coding**: Avoid hidden assumptions. Surface tradeoffs and plan implementation thoroughly.
+- **Simplicity First**: Aim for the simplest solution that works. Avoid over-engineering.
+- **Define Success Criteria**: Know how you will verify that your changes work.
+
+---
+
 ## Step 1 — Inspect Uncommitted Changes
 
 ```bash
@@ -86,7 +95,7 @@ git checkout -b <branch-name>
 
 ## Step 6 — Commit and Push
 
-Stage only the files relevant to the change (avoid `git add -A` blindly):
+Stage only the files relevant to the change (avoid `git add -A` blindly). Emphasize **Surgical Changes** — make precise, localized edits.
 
 ```bash
 git add <specific files>
@@ -116,3 +125,5 @@ PR body must include:
 The reviewer must examine code coverage reports and ensure that all new code is accompanied by corresponding unit tests. Verify that:
 - Coverage metrics are collected and ideally meet the required threshold (80%).
 - All unit tests run cleanly without network dependency issues (by utilizing mocks).
+
+Ensure **Goal-Driven Execution** — verify that the success criteria defined in Step 0 are met.

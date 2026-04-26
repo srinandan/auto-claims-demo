@@ -134,6 +134,17 @@ This command automatically retrieves the reasoning engine principal and grants i
 
 ---
 
+## General Coding Principles
+
+These principles are adapted from the [Andrej Karpathy skills](https://github.com/forrestchang/andrej-karpathy-skills) repository and should guide all development work:
+
+- **Think Before Coding**: Avoid hidden assumptions. Surface tradeoffs and plan implementation thoroughly before writing code.
+- **Simplicity First**: Write the minimum amount of code necessary to solve the problem. Avoid over-engineering and unnecessary abstractions.
+- **Surgical Changes**: Make precise, localized edits. Maintain consistency with the existing codebase rather than doing sweeping refactors.
+- **Goal-Driven Execution**: Define verifiable success criteria for every task and ensure the solution is verified.
+
+---
+
 ## Coding Workflow Skill
 
 Before opening a pull request, load and follow the coding workflow skill:
